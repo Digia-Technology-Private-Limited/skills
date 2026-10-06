@@ -1,7 +1,7 @@
 # iOS
 
-Docs: `https://www.digia.tech/docs/developer/<cep>.md` (`clevertap`, `moengage`, `webengage`).
-Read the install section for the package URLs and latest versions. Digia-managed campaigns are
+Docs: `https://www.digia.tech/docs/developer/<cep>` (`clevertap`, `moengage`, `webengage`).
+Read the install section for the package URLs. Use the latest tag. Digia-managed campaigns are
 not available on iOS yet: ask the user which CEP to use.
 
 ## Dependencies

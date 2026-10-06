@@ -18,3 +18,5 @@ jobs:
       - run: pip install skills-ref
       - run: agentskills validate skills/setup-digia-engage
       - run: scripts/check-checklist-drift.sh
+        env:
+          GH_TOKEN: ${{ secrets.DOCS_READ_TOKEN }}

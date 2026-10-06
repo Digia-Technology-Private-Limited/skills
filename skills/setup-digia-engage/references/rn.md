@@ -1,7 +1,7 @@
 # React Native
 
-Docs: `https://www.digia.tech/docs/developer/<cep>.md` (`clevertap`, `moengage`, `webengage`,
-`digia-cep`). Read the install section for the latest package versions.
+Docs: `https://www.digia.tech/docs/developer/<cep>` (`clevertap`, `moengage`, `webengage`,
+`digia-cep`). Get the latest versions with `npm view @digia-engage/<package> version`.
 
 ## Dependencies
 
@@ -22,8 +22,8 @@ app already uses them for native code, so the next prebuild keeps them.
 
 ## Initialize and register
 
-Put this in the startup code that runs once, before the first screen needs campaigns. Await both
-calls: an early campaign is dropped as `not_ready`.
+Put this in the app's startup code. With no such place, use a `useEffect(() => { ... }, [])` in
+the root `App` component. Await both calls: an early campaign is dropped as `not_ready`.
 
 ```ts
 import { Digia } from '@digia-engage/core';
@@ -68,6 +68,10 @@ useFocusEffect(useCallback(() => { Digia.setCurrentScreen('home'); }, []));
 Or once, on the container:
 
 ```tsx
+import { createNavigationContainerRef, ParamListBase } from '@react-navigation/native';
+
+const navigationRef = createNavigationContainerRef<ParamListBase>();
+
 <NavigationContainer ref={navigationRef} onStateChange={() => {
   const name = navigationRef.getCurrentRoute()?.name;
   if (name) Digia.setCurrentScreen(name);
@@ -99,9 +103,12 @@ super.onCreate()
 CleverTapRnAPI.initReactNativeIntegration(this)
 ```
 
-iOS `AppDelegate`, in `didFinishLaunchingWithOptions` before the `return`:
+iOS `AppDelegate`, in `didFinishLaunchingWithOptions` before React Native starts (before
+`factory.startReactNative(`):
 
 ```swift
+import CleverTapSDK
+import CleverTapReact
 import DigiaEngageCleverTap
 
 DigiaCleverTapPlugin.prepareCleverTapCustomTemplates()
@@ -114,7 +121,8 @@ file: the template is now registered in code.
 
 ### MoEngage
 
-Use the normal MoEngage React Native setup. No Digia native step.
+Use the normal MoEngage React Native setup. Keep the app's `MoEInitializer` call in
+`MainApplication`. No Digia native step.
 
 ### WebEngage
 
@@ -144,8 +152,10 @@ No CEP SDK. Every campaign needs screen tracking for its on-screen trigger.
 
 ## Debug deeplink
 
-iOS: add `digia-engage` to `CFBundleURLSchemes` in `Info.plist` (Expo: `expo.ios.infoPlist`).
-The `AppDelegate` `open url` method gives React Native the URL first:
+iOS: add a `CFBundleURLTypes` entry with `digia-engage` in `CFBundleURLSchemes` to `Info.plist`
+(Expo: `expo.ios.infoPlist`). If `AppDelegate` has no `application(_:open:options:)`, add it and
+return `RCTLinkingManager.application(app, open: url, options: options)`. If another SDK handles
+URLs there, give React Native the URL first:
 
 ```swift
 let handledByReactNative = RCTLinkingManager.application(app, open: url, options: options)
@@ -156,7 +166,8 @@ Android needs no step.
 
 ## Build
 
-- Android: `cd android && ./gradlew assembleDebug`
+- Android: `cd android && ./gradlew assembleDebug`. Add `-PreactNativeArchitectures=arm64-v8a`
+  for a faster check build.
 - iOS: `cd ios && pod install && xcodebuild -workspace *.xcworkspace -scheme <App> -sdk iphonesimulator -configuration Debug build`
 - TypeScript: `npx tsc --noEmit`
 

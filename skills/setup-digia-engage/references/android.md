@@ -1,7 +1,7 @@
 # Android
 
-Docs: `https://www.digia.tech/docs/developer/<cep>.md` (`clevertap`, `moengage`, `webengage`).
-Read the install section for the latest versions. Digia-managed campaigns are not available on
+Docs: `https://www.digia.tech/docs/developer/<cep>` (`clevertap`, `moengage`, `webengage`).
+Get the latest versions from Maven Central (`tech.digia`). Digia-managed campaigns are not available on
 Android yet: ask the user which CEP to use.
 
 ## Dependencies

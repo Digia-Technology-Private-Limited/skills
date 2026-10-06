@@ -38,9 +38,8 @@ Read the stack reference now. Done when stack and CEP are both known.
 
 ## 3. Load the checklist
 
-Fetch `https://www.digia.tech/docs/developer/integration-checklist.md`. On failure, read the bundled
-[checklist.md](references/checklist.md). Keep only the rules for this stack whose CEP column is
-`all` or names this CEP.
+Read [checklist.md](references/checklist.md). Keep only the rules for this stack whose CEP column
+is `all` or names this CEP.
 
 Done when you hold the list of applicable rule IDs.
 
@@ -55,10 +54,10 @@ Search the source for the Digia core package and a `Digia.initialize` call.
 
 Follow the stack reference, section by section, for this CEP:
 
-1. Add the dependencies. Read the latest version from the platform docs page the reference
-   names. Install them with the stack's package manager.
+1. Add the dependencies at their latest versions, with the command in the stack reference.
+   The stack reference is the authority for code. Docs code samples can show older APIs.
 2. Ask the user for the Digia API key. If they skip, write `YOUR_API_KEY` and continue. Check
-   reports it as a fail.
+   then reports the key rule as a fail. Leave that fail for the user.
 3. Add initialize, plugin registration, host, screen tracking and the CEP native steps.
 4. Match the app's existing code style, entry points and navigation library.
 5. Build the app with the command in the stack reference. Fix errors until the build passes.
