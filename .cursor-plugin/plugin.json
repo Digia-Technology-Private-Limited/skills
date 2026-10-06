@@ -1,0 +1,9 @@
+{
+  "name": "digia-engage",
+  "displayName": "Digia Engage",
+  "version": "1.0.0",
+  "description": "Agent skills for integrating the Digia Engage SDK.",
+  "author": { "name": "Digia Technology" },
+  "license": "BUSL-1.1",
+  "logo": "./assets/logo-light.svg"
+}

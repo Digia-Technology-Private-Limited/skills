@@ -1,8 +1,7 @@
 # Android
 
-Docs: `https://www.digia.tech/docs/developer/<cep>.md` (`clevertap`, `moengage`, `webengage`).
-Read the install section for the latest versions. Digia-managed campaigns are not available on
-Android yet: ask the user which CEP to use.
+Docs: `https://www.digia.tech/docs/developer/<cep>` (`clevertap`, `moengage`, `webengage`).
+Digia-managed campaigns are not available on Android yet: ask the user which CEP to use.
 
 ## Dependencies
 
@@ -12,34 +11,50 @@ Android yet: ask the user which CEP to use.
 | moengage | `tech.digia:engage` `tech.digia:engage-moengage` |
 | webengage | `tech.digia:engage` `tech.digia:engage-webengage` |
 
-Add them to the app module, in the version catalog if the project has one. The repositories
-need `mavenCentral()`. Keep the app's own CEP SDK.
+Read the latest versions from Maven Central:
+`https://repo1.maven.org/maven2/tech/digia/<artifact>/maven-metadata.xml` (`<release>`).
+Add both artifacts to the app module, in the version catalog if the project has one. The
+repositories need `mavenCentral()`.
+
+Declare `engage` explicitly at its latest version. The CEP plugins depend on an older `engage`,
+and Gradle picks the highest version.
+
+Keep the app's own CEP SDK. The SDK needs `minSdk` 24 or later.
 
 ## Initialize and register
 
-In `Application.onCreate`. Use the callback form: the two-argument `initialize` is a `suspend`
-function. Keep the call off `runBlocking`.
+In `Application.onCreate`:
 
 ```kotlin
 class App : Application() {
     override fun onCreate() {
-        DigiaCleverTapPlugin.prepareCleverTapCustomTemplates() // CleverTap only, first line
-        ActivityLifecycleCallback.register(this)               // CleverTap only
+        ActivityLifecycleCallback.register(this) // CleverTap only, before super.onCreate()
         super.onCreate()
-        Digia.initialize(this, DigiaConfig(apiKey = "YOUR_API_KEY")) { _ -> }
-        Digia.register(DigiaCleverTapPlugin(this))
+        Digia.initialize(applicationContext, DigiaConfig(apiKey = "YOUR_API_KEY"))
+        Digia.register(DigiaCleverTapPlugin(applicationContext))
     }
 }
 ```
 
 | CEP | Register call |
 |---|---|
-| clevertap | `Digia.register(DigiaCleverTapPlugin(this))` (`com.digia.engage.clevertap`) |
-| moengage | `Digia.register(MoEngagePlugin(this))` (`com.digia.moengage`) |
+| clevertap | `Digia.register(DigiaCleverTapPlugin(applicationContext))` (`com.digia.engage.clevertap`) |
+| moengage | `Digia.register(MoEngagePlugin(applicationContext))` (`com.digia.moengage`) |
 | webengage | `Digia.register(WebEngagePlugin())` (`com.digia.webengage`) |
 
-Start the CEP SDK before `register`, as its own docs say. Register one plugin. A second
-`register` replaces the first.
+Start the CEP SDK before `register`, as its own docs say. Register one plugin.
+
+If the app has no `Application` class, create one and set `android:name` on `<application>` in
+`AndroidManifest.xml`.
+
+## CEP native steps
+
+- CleverTap: the plugin registers the Digia template itself. Add `CLEVERTAP_ACCOUNT_ID` and
+  `CLEVERTAP_TOKEN` `<meta-data>` to `AndroidManifest.xml`. Ask the user for them. If they skip,
+  write `YOUR_CLEVERTAP_ACCOUNT_ID` and `YOUR_CLEVERTAP_TOKEN`.
+- MoEngage: `MoEngage.initialiseDefaultInstance(MoEngage.Builder(this, "YOUR_MOENGAGE_APP_ID").build())`
+  before `register`.
+- WebEngage: start WebEngage as its docs say, before `register`.
 
 ## Host
 
@@ -65,18 +80,30 @@ Next to the app's login and logout code: `Digia.setUserId(user.id)`, then on log
 
 ## Debug deeplink
 
-No step. The SDK declares `digia-engage://_digia/debug-settings` in its manifest. It works in
-debuggable builds only. Test with
+The app routes the link. Add an intent filter for the `digia-engage` scheme to the launcher
+activity, then in `onCreate` and `onNewIntent`:
+
+```kotlin
+intent?.data?.let { if (Digia.handleDeepLink(this, it)) return }
+```
+
+It opens in debuggable builds only. Test with
 `adb shell am start -a android.intent.action.VIEW -d "digia-engage://_digia/debug-settings" <package>`.
 
 ## Build
 
 `./gradlew :app:assembleDebug`
 
-## v1 upgrade
+## Check
 
-| v1 | v2 |
-|---|---|
-| `DigiaCEPDelegate`, `healthCheck`, `teardown` | Use the published plugin class. |
-| `forwardScreen`, `notifyEvent` | `DigiaScreen` or `digiaScreen` |
-| `runBlocking { Digia.initialize(...) }` | Callback form of `initialize` |
+| ID | Rule | Severity | CEP | Detect | Fix |
+|---|---|---|---|---|---|
+| AN-01 | Core and CEP plugin added | fail | all | `tech.digia:engage` and `tech.digia:engage-<cep>` in Gradle files or the version catalog | Add **Dependencies**. |
+| AN-02 | Initialized in `Application.onCreate` | fail | all | `Digia.initialize(` in the class named by `android:name` | Add **Initialize and register**. |
+| AN-03 | Real API key | fail | all | `apiKey =` value is not `YOUR_API_KEY` | Put the key from the Digia dashboard. |
+| AN-04 | One plugin registered, after `initialize` and the CEP SDK start | fail | all | exactly one `Digia.register(`, after `Digia.initialize(` and the CEP start call | Add the call from **Initialize and register**. |
+| AN-05 | Host present | fail | all | `DigiaHost {` or `DigiaHostView` | Add **Host**. |
+| AN-06 | Screen tracking | fail | all | `DigiaScreen(` or `digiaScreen(` or `Digia.setCurrentScreen(` | Add **Screen tracking**. |
+| AN-07 | Identity | warn | all | `Digia.setUserId(` and `Digia.clearUserId(` | Add **Identity**. |
+| AN-08 | CleverTap native setup | fail | clevertap | `ActivityLifecycleCallback.register(this)` before `super.onCreate()`, account ID in `AndroidManifest.xml` | Add the **CleverTap** step. |
+| AN-09 | Debug deeplink routed | warn | all | `Digia.handleDeepLink(` and a `digia-engage` intent filter | Add **Debug deeplink**. |

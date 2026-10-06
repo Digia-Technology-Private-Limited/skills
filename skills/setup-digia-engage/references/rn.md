@@ -1,20 +1,29 @@
 # React Native
 
-Docs: `https://www.digia.tech/docs/developer/<cep>.md` (`clevertap`, `moengage`, `webengage`,
-`digia-cep`). Read the install section for the latest package versions.
+Docs: `https://www.digia.tech/docs/developer/<cep>` (`clevertap`, `moengage`, `webengage`,
+`digia-cep`). Get the latest versions with `npm view <package> version`.
 
 ## Dependencies
 
 | CEP | Packages |
 |---|---|
-| clevertap | `@digia-engage/core` `@digia-engage/clevertap` |
-| moengage | `@digia-engage/core` `@digia-engage/moengage` |
-| webengage | `@digia-engage/core` `@digia-engage/webengage` |
+| clevertap | `@digia-engage/core` `@digia-engage/clevertap` `clevertap-react-native` |
+| moengage | `@digia-engage/core` `@digia-engage/moengage` `react-native-moengage` |
+| webengage | `@digia-engage/core` `@digia-engage/webengage` `react-native-webengage` |
 | digia | `@digia-engage/core` |
 
-Install with the app's package manager (the lockfile tells you which). Then run `pod install`
-in `ios/`. The packages autolink. Keep the app's own CEP SDK (`clevertap-react-native`,
-`react-native-moengage`, `react-native-webengage`).
+Install with the app's package manager (the lockfile tells you which). The packages autolink.
+Keep the app's CEP SDK if it is already there.
+
+iOS: CocoaPods trunk does not have the current `DigiaEngage` pod. Read the `DigiaEngage`
+version range in `node_modules/@digia-engage/core/*.podspec`, and add the matching tag to the
+`Podfile` target:
+
+```ruby
+pod 'DigiaEngage', :git => 'https://github.com/Digia-Technology-Private-Limited/de_ios_core.git', :tag => '<version>'
+```
+
+Then run `pod install` in `ios/`.
 
 Expo: the packages have no config plugin. The app needs a development build. If there is no
 `ios/` or `android/` folder, run `npx expo prebuild`. Put native edits in a config plugin when the
@@ -22,25 +31,26 @@ app already uses them for native code, so the next prebuild keeps them.
 
 ## Initialize and register
 
-Put this in the startup code that runs once, before the first screen needs campaigns. Await both
-calls: an early campaign is dropped as `not_ready`.
+Put this in the app's startup code. With no such place, use a `useEffect(() => { ... }, [])` in
+the root `App` component. Await `initialize` before `register`.
 
 ```ts
 import { Digia } from '@digia-engage/core';
-import { DigiaCleverTapPlugin } from '@digia-engage/clevertap';
+import CleverTap from 'clevertap-react-native';
+import { DigiaCleverTapPlugin, createCleverTapClient } from '@digia-engage/clevertap';
 
 await Digia.initialize({ apiKey: 'YOUR_API_KEY' });
-await Digia.register(new DigiaCleverTapPlugin());
+Digia.register(new DigiaCleverTapPlugin({ cleverTap: createCleverTapClient(CleverTap) }));
 ```
 
 | CEP | Second call |
 |---|---|
-| clevertap | `await Digia.register(new DigiaCleverTapPlugin())` from `@digia-engage/clevertap` |
-| moengage | `await Digia.register(new DigiaMoEngagePlugin())` from `@digia-engage/moengage` |
-| webengage | `await Digia.register(new DigiaWebEngagePlugin())` from `@digia-engage/webengage` |
+| clevertap | `Digia.register(new DigiaCleverTapPlugin({ cleverTap: createCleverTapClient(CleverTap) }))` |
+| moengage | `Digia.register(new DigiaMoEngagePlugin({ moEngage: ReactMoE }))`, with `import ReactMoE from 'react-native-moengage'` and `DigiaMoEngagePlugin` from `@digia-engage/moengage` |
+| webengage | `Digia.register(new DigiaWebEngagePlugin())` from `@digia-engage/webengage` |
 | digia | `Digia.enableManagedCampaigns()` |
 
-The plugin constructors take no arguments.
+Register one plugin. With `digia`, register no plugin.
 
 ## Host
 
@@ -52,9 +62,6 @@ Render `<DigiaHost />` once, as the last child of the root component, after the 
 ```
 
 Expo Router: `<Stack />` then `<DigiaHost />` in the root `_layout`.
-
-The SDK mounts the native overlay host itself during `initialize`. Use only `<DigiaHost />` in
-JavaScript.
 
 ## Screen tracking
 
@@ -68,6 +75,10 @@ useFocusEffect(useCallback(() => { Digia.setCurrentScreen('home'); }, []));
 Or once, on the container:
 
 ```tsx
+import { createNavigationContainerRef, ParamListBase } from '@react-navigation/native';
+
+const navigationRef = createNavigationContainerRef<ParamListBase>();
+
 <NavigationContainer ref={navigationRef} onStateChange={() => {
   const name = navigationRef.getCurrentRoute()?.name;
   if (name) Digia.setCurrentScreen(name);
@@ -79,7 +90,7 @@ Or once, on the container:
 Next to the app's existing login and logout code:
 
 ```ts
-await Digia.setUserId(user.id);   // login
+Digia.setUserId(user.id);         // login
 Digia.clearUserId();              // logout
 Digia.clearAllInlineContent();    // logout
 ```
@@ -90,53 +101,36 @@ Keep the CEP's own login call. It does not reach Digia.
 
 ### CleverTap
 
-Android `MainApplication.onCreate`, in this order:
+The package registers the Digia template itself. Follow the CleverTap React Native setup:
 
-```kotlin
-DigiaCleverTapPlugin.prepareCleverTapCustomTemplates() // com.digia.engage.clevertap
-ActivityLifecycleCallback.register(this)
-super.onCreate()
-CleverTapRnAPI.initReactNativeIntegration(this)
-```
-
-iOS `AppDelegate`, in `didFinishLaunchingWithOptions` before the `return`:
-
-```swift
-import DigiaEngageCleverTap
-
-DigiaCleverTapPlugin.prepareCleverTapCustomTemplates()
-CleverTap.autoIntegrate()
-CleverTapReactManager.sharedInstance()?.applicationDidLaunch(options: launchOptions)
-```
-
-Without the template call, CleverTap drops every Digia campaign. Remove any `digia.json` template
-file: the template is now registered in code.
+- Android `MainApplication.onCreate`: `ActivityLifecycleCallback.register(this)` before
+  `super.onCreate()`, then `CleverTapRnAPI.initReactNativeIntegration(this)`.
+- iOS `AppDelegate`, before React Native starts: `CleverTap.autoIntegrate()`, then
+  `CleverTapReactManager.sharedInstance()?.applicationDidLaunch(options: launchOptions)`.
+- Add the CleverTap account ID and token: `CLEVERTAP_ACCOUNT_ID` and `CLEVERTAP_TOKEN`
+  `<meta-data>` in `AndroidManifest.xml`, and `CleverTapAccountID` and `CleverTapToken` in
+  `Info.plist`. Ask the user for them. If they skip, write `YOUR_CLEVERTAP_ACCOUNT_ID` and
+  `YOUR_CLEVERTAP_TOKEN`.
 
 ### MoEngage
 
-Use the normal MoEngage React Native setup. No Digia native step.
+Call `ReactMoE.initialize('YOUR_MOENGAGE_APP_ID')` before `Digia.register`. Keep the native
+MoEngage setup from the `react-native-moengage` docs.
 
 ### WebEngage
 
-iOS `AppDelegate` starts WebEngage with the Digia delegate. WebEngage accepts one delegate, at
+iOS `AppDelegate`: start WebEngage with the Digia delegate. WebEngage accepts one delegate, at
 start only:
 
 ```swift
-import DigiaEngageWebEngage
+import DigiaWebEngage
 
 WebEngage.sharedInstance().application(application,
   didFinishLaunchingWithOptions: launchOptions,
-  webengageConfig: WebEngageConfig.builder()
-    .setNotificationDelegate(DigiaWebEngagePlugin.notificationDelegate)
-    .build())
+  notificationDelegate: WEDigiaSuppressProxy.shared())
 ```
 
-Android `MainApplication.onCreate`:
-
-```kotlin
-registerActivityLifecycleCallbacks(
-  WebEngageActivityLifeCycleCallbacks(this, WebEngageConfig.Builder().build()))
-```
+The iOS pod needs iOS 17.0. Android needs no Digia step.
 
 ### Digia
 
@@ -144,30 +138,37 @@ No CEP SDK. Every campaign needs screen tracking for its on-screen trigger.
 
 ## Debug deeplink
 
-iOS: add `digia-engage` to `CFBundleURLSchemes` in `Info.plist` (Expo: `expo.ios.infoPlist`).
-The `AppDelegate` `open url` method gives React Native the URL first:
+iOS: add a `CFBundleURLTypes` entry with `digia-engage` in `CFBundleURLSchemes` to `Info.plist`
+(Expo: `expo.ios.infoPlist`). If `AppDelegate` has no `application(_:open:options:)`, add it and
+return `RCTLinkingManager.application(app, open: url, options: options)`.
 
-```swift
-let handledByReactNative = RCTLinkingManager.application(app, open: url, options: options)
-return OtherSDK.application(app, open: url, options: options) || handledByReactNative
+If the app handles incoming URLs in JavaScript, pass the Digia link on first:
+
+```ts
+if (Digia.isDebugSettingsDeepLink(url)) { Digia.handleDeepLink(url); return; }
 ```
-
-Android needs no step.
 
 ## Build
 
-- Android: `cd android && ./gradlew assembleDebug`
+- Android: `cd android && ./gradlew assembleDebug`. Add `-PreactNativeArchitectures=arm64-v8a`
+  for a faster check build.
 - iOS: `cd ios && pod install && xcodebuild -workspace *.xcworkspace -scheme <App> -sdk iphonesimulator -configuration Debug build`
 - TypeScript: `npx tsc --noEmit`
 
-## v1 upgrade
+## Check
 
-| v1 | v2 |
-|---|---|
-| `projectId`, `baseUrl` in config | `apiKey` only |
-| `createCleverTapClient(...)`, `new DigiaCleverTapPlugin({ cleverTap })` | `new DigiaCleverTapPlugin()` |
-| `WebEngageBridge` | `new DigiaWebEngagePlugin()` |
-| `Digia.register(plugin)` without `await` | `await Digia.register(plugin)` |
-| `<DigiaHostView>` | `<DigiaHost />` |
-| `Digia.onCampaignTriggered`, `Digia.registerAnchor` | remove; use `<DigiaAnchorView anchorKey>` |
-| `digia.json` CleverTap template | `prepareCleverTapCustomTemplates()` |
+| ID | Rule | Severity | CEP | Detect | Fix |
+|---|---|---|---|---|---|
+| RN-01 | Core package installed | fail | all | `@digia-engage/core` in `package.json` | Install it. |
+| RN-02 | CEP plugin and CEP SDK installed | fail | clevertap, moengage, webengage | both packages from **Dependencies** in `package.json` | Install the pair. |
+| RN-03 | `initialize` is awaited before `register` | fail | all | `await Digia.initialize(` before `Digia.register(` or `enableManagedCampaigns(` | Move the call after the awaited `initialize`. |
+| RN-04 | Real API key | fail | all | `apiKey:` value is not `YOUR_API_KEY` | Put the key from the Digia dashboard. |
+| RN-05 | One `<DigiaHost />`, last child of the root | fail | all | exactly one `<DigiaHost` in the source | Add it after the navigator. |
+| RN-06 | One plugin registered, or managed campaigns on | fail | all | one `Digia.register(`; for `digia`, `Digia.enableManagedCampaigns()` and no `register` | Add the call from **Initialize and register**. |
+| RN-07 | Screen tracking | fail | all | `Digia.setCurrentScreen(` | Add **Screen tracking**. |
+| RN-08 | Identity | warn | all | `Digia.setUserId(` and `Digia.clearUserId(` | Add **Identity**. |
+| RN-09 | iOS core pod from git | fail | all | `pod 'DigiaEngage', :git =>` in `ios/Podfile` | Add the pod line from **Dependencies**. |
+| RN-10 | CleverTap native setup | fail | clevertap | `ActivityLifecycleCallback.register` in `MainApplication`, `CleverTap.autoIntegrate` in `AppDelegate`, account ID on both platforms | Add the **CleverTap** steps. |
+| RN-11 | MoEngage started | fail | moengage | `ReactMoE.initialize(` | Add the **MoEngage** step. |
+| RN-12 | WebEngage iOS delegate | fail | webengage | `WEDigiaSuppressProxy.shared()` in `AppDelegate` | Add the **WebEngage** step. |
+| RN-13 | iOS debug deeplink scheme | warn | all | `digia-engage` in `CFBundleURLSchemes` | Add **Debug deeplink**. |
