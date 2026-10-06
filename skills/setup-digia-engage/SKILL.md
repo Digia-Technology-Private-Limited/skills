@@ -83,7 +83,8 @@ Digia Engage check — <stack> × <CEP>
 <n> pass · <n> warn · <n> fail
 ```
 
-List fails first, then warns, then passes. Give the **Fix** for each fail and warn.
+List fails first, then warns, then passes. Give the **Fix** for each fail and warn. For a v1 API fail, give the steps from the
+stack reference's **v1 upgrade** table.
 
 If any rule fails, offer to fix them. On yes, apply the fixes, build, and check again.
 

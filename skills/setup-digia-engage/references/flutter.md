@@ -1,8 +1,7 @@
 # Flutter
 
 Docs: `https://www.digia.tech/docs/developer/<cep>` (`clevertap`, `moengage`, `webengage`).
-Digia-managed campaigns are not
-available on Flutter yet: ask the user which CEP to use.
+Digia-managed campaigns are not available on Flutter yet: ask the user which CEP to use.
 
 ## Dependencies
 
