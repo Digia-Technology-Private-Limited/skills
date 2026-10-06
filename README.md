@@ -1,36 +1,70 @@
-# Digia Engage agent skills
+<p align="center">
+  <a href="https://www.digia.tech">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.svg">
+      <img src="assets/logo-light.svg" alt="Digia" width="240">
+    </picture>
+  </a>
+</p>
 
-Agent skills that integrate the [Digia Engage](https://www.digia.tech/docs/developer) SDK into
-your app.
+<h3 align="center">Ship in-app experiences, not releases.</h3>
 
-| Skill | What it does |
-|---|---|
-| [`setup-digia-engage`](skills/setup-digia-engage/SKILL.md) | Adds Digia Engage to a React Native, Flutter, Android or iOS app with CleverTap, MoEngage, WebEngage or Digia-managed campaigns. If Digia Engage is already in the app, it checks the integration and reports each issue with its fix. |
+<p align="center">
+  Agent skills that add <a href="https://www.digia.tech">Digia Engage</a> to your mobile app in one prompt.
+</p>
+
+<p align="center">
+  <a href="https://www.digia.tech/docs/developer">Docs</a> ·
+  <a href="https://www.digia.tech">Website</a> ·
+  <a href="https://dispatch.digia.tech">Blog</a>
+</p>
+
+---
+
+Digia Engage lets your growth team ship nudges, bottom sheets, coachmarks, quizzes, scratch
+cards and NPS surveys to your app with no code and no app release. It runs on the CEP you
+already use: CleverTap, MoEngage or WebEngage.
+
+The `setup-digia-engage` skill does the integration for you. Your coding agent adds the SDK,
+connects your CEP, builds the app, and checks the result.
 
 ## Install
 
-Pick one route.
+Pick the line for your agent.
 
-```bash
-# Any agent that supports Agent Skills (Claude Code, Cursor, Codex, and others)
-npx skills add Digia-Technology-Private-Limited/skills
-
-# Claude Code plugin
-/plugin marketplace add Digia-Technology-Private-Limited/skills
-/plugin install digia-engage@digia-engage
-```
+| Agent | Command |
+|---|---|
+| Claude Code | `/plugin marketplace add Digia-Technology-Private-Limited/skills`<br>`/plugin install digia-engage@digia-engage` |
+| Codex | `codex plugin marketplace add Digia-Technology-Private-Limited/skills` |
+| Cursor, Copilot, OpenCode, Gemini CLI and others | `npx skills add Digia-Technology-Private-Limited/skills` |
 
 ## Use
 
-Open your app's repository in your agent, commit or stash your changes, and run:
+1. Open your app's repository in your agent.
+2. Commit or stash your changes, so you can review the diff.
+3. Ask: **"Set up Digia Engage"**, or run `/setup-digia-engage`.
 
-```
-/setup-digia-engage
-```
+| Your app | What the skill does |
+|---|---|
+| Has no Digia Engage | Detects your platform and CEP, asks for your Digia API key, adds the SDK, builds the app, then checks the result. |
+| Has Digia Engage | Checks the integration and reports each issue with its file, line and fix. It offers to fix them. |
 
-The skill detects your platform and CEP, asks for your Digia API key, makes the changes, builds
-the app, and checks the result against the
-[integration checklist](https://www.digia.tech/docs/developer/integration-checklist).
+## Supported setups
+
+| Platform | CleverTap | MoEngage | WebEngage | Digia-managed |
+|---|:-:|:-:|:-:|:-:|
+| React Native | ✅ | ✅ | ✅ | ✅ |
+| Flutter | ✅ | ✅ | ✅ | — |
+| Android | ✅ | ✅ (beta) | ✅ | — |
+| iOS | ✅ (beta) ¹ | ✅ (beta) ¹ | ✅ ¹ | — |
+
+¹ The iOS CEP plugin packages need access. Ask info@digia.tech.
+
+## After setup
+
+- Run a live test from the [Digia Engage Dashboard](https://www.digia.tech).
+- Open SDK Debug Settings on a device with `digia-engage://_digia/debug-settings`.
+- Need help? Write to [info@digia.tech](mailto:info@digia.tech).
 
 ## License
 

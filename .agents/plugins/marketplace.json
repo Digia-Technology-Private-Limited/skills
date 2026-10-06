@@ -1,0 +1,16 @@
+{
+  "name": "digia-engage",
+  "plugins": [
+    {
+      "name": "digia-engage",
+      "source": {
+        "source": "local",
+        "path": "./"
+      },
+      "policy": {
+        "installation": "AVAILABLE"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
