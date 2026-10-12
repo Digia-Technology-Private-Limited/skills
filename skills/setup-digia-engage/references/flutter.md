@@ -5,17 +5,36 @@ Digia-managed campaigns are not available on Flutter yet: ask the user which CEP
 
 ## Dependencies
 
-| CEP | Packages |
+| CEP | Command |
 |---|---|
-| clevertap | `digia_engage` `digia_engage_clevertap` |
-| moengage | `digia_engage` `digia_moengage_plugin` |
-| webengage | `digia_engage` `digia_webengage_plugin` |
+| clevertap | `flutter pub add digia_engage:^2.1.0 digia_engage_clevertap:^2.0.0 clevertap_plugin:^3.8.1` |
+| moengage | `flutter pub add digia_engage:^2.1.0 digia_moengage_plugin:^2.0.0 moengage_flutter:^10.5.0` |
+| webengage | `flutter pub add digia_engage:^2.1.0 digia_webengage_plugin:^2.0.0 webengage_flutter:^1.7.0` |
 
-Run `flutter pub add <packages>`. The SDK needs Dart 3.6 and Flutter 3.29 or later.
+Then run `flutter pub upgrade dio`. `digia_engage` 2.1.0 does not compile with dio 5.9.0.
 
-Keep the app's own CEP SDK (`clevertap_plugin`, `moengage_flutter`, `webengage_flutter`). If
-`pub get` reports a version conflict, constrain the app's CEP SDK to the range in the Digia
-plugin's `pubspec.yaml`.
+The SDK needs Dart 3.6 and Flutter 3.29 or later.
+
+iOS: set the deployment target to 15.0 or later. Xcode 27 rejects the `flutter create`
+default of 13.0. In `ios/Podfile`, set `platform :ios, '15.0'`, and set
+`IPHONEOS_DEPLOYMENT_TARGET = 15.0` in `ios/Runner.xcodeproj/project.pbxproj`. If pods still
+report 13.0, add this inside the Podfile's `post_install` loop, after
+`flutter_additional_ios_build_settings(target)`:
+
+```ruby
+target.build_configurations.each do |config|
+  config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+end
+```
+
+`flutter build ios` shows the deployment target error only as a warning. It then prints
+"Encountered error while building for simulator".
+
+Campaigns show from iOS 17.0.
+
+Keep the app's own CEP SDK. The Digia plugins do not support the next major CEP SDK version
+(`clevertap_plugin` 4, `moengage_flutter` 11, `webengage_flutter` 2). If the app already uses one,
+tell the user, and ask before you lower it to the range in the command.
 
 Imports:
 
@@ -45,7 +64,8 @@ Future<void> main() async {
 | moengage | `Digia.register(MoEngagePlugin(instance: moEngage))` |
 | webengage | `Digia.register(DigiaWebEngagePlugin())` |
 
-MoEngage: start MoEngage first, and pass the same instance.
+MoEngage: create the Dart `MoEngageFlutter` instance, call `initialise()`, and pass the same
+instance to the plugin. You also start MoEngage natively (**CEP native steps**). Both are needed.
 
 ```dart
 final moEngage = MoEngageFlutter('YOUR_MOENGAGE_APP_ID');
@@ -88,7 +108,11 @@ await Digia.clearUserId();        // logout
 Digia.clearAllInlineContent();    // logout
 ```
 
-Keep the CEP's own login call. It does not reach Digia.
+Keep the CEP's own login call. It does not reach Digia. MoEngage: `moEngage.identifyUser(user.id)`
+on login, `moEngage.logout()` on logout.
+
+Put the API key where the app keeps its other keys, for example `--dart-define`. If the app has no
+such place, write it in `main`.
 
 ## CEP native steps
 
@@ -124,16 +148,37 @@ Add the CleverTap account ID and token: `CLEVERTAP_ACCOUNT_ID` and `CLEVERTAP_TO
 
 ### MoEngage
 
-MoEngage starts natively on both platforms. No Digia native step.
+Start MoEngage natively on both platforms, as MoEngage requires. Digia adds no native step.
+Ask the user for the MoEngage App ID and data center. If they skip, write placeholders.
 
-Android, in a custom `Application` class declared in `AndroidManifest.xml`:
+Android: create `MainApplication.kt` next to `MainActivity.kt`, in the same package, and set
+`android:name=".MainApplication"` on `<application>`:
 
 ```kotlin
-MoEInitializer.initialiseDefaultInstance(applicationContext,
-    MoEngage.Builder(this, "YOUR_MOENGAGE_APP_ID", DataCenter.DATA_CENTER_1))
+import com.moengage.core.DataCenter
+import com.moengage.core.MoEngage
+import com.moengage.flutter.MoEInitializer
+import io.flutter.app.FlutterApplication
+
+class MainApplication : FlutterApplication() {
+    override fun onCreate() {
+        super.onCreate()
+        MoEInitializer.initialiseDefaultInstance(applicationContext,
+            MoEngage.Builder(this, "YOUR_MOENGAGE_APP_ID", DataCenter.DATA_CENTER_1))
+    }
+}
 ```
 
-The class is `com.moengage.flutter.MoEInitializer`. Note the spelling `initialise`.
+Note the spelling `initialise`. `DATA_CENTER_1` matches data center 1: use the user's.
+
+Add Glide to `android/app/build.gradle(.kts)`. Without it, MoEngage stops the app when an in-app
+campaign with an image arrives:
+
+```kotlin
+dependencies {
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+}
+```
 
 iOS `AppDelegate`, with `import MoEngageSDK` and `import moengage_flutter_ios`:
 
@@ -145,7 +190,7 @@ MoEngageInitializer.sharedInstance.initializeDefaultInstance(
 
 ### WebEngage
 
-Android, in a custom `Application` class declared in `AndroidManifest.xml`:
+Android, in a custom `Application` class (create it as in **MoEngage**):
 
 ```kotlin
 WebengageInitializer.initialize(this,
@@ -214,3 +259,5 @@ if (Digia.isDebugSettingsDeepLink(uri)) {
 | FL-10 | MoEngage started, same instance passed | fail | moengage | `MoEngagePlugin(instance:` with the initialised `MoEngageFlutter` | Add the **MoEngage** steps. |
 | FL-11 | WebEngage iOS delegate | fail | webengage | `DigiaDelegateProxy` held in a property and passed as `notificationDelegate` | Add the **WebEngage** steps. |
 | FL-12 | iOS debug deeplink scheme | warn | all | `digia-engage` in `ios/Runner/Info.plist` `CFBundleURLSchemes` | Add **Debug deeplink**. |
+| FL-13 | iOS deployment target | fail | all | `platform :ios, '15.0'` or later in `ios/Podfile` | Add the iOS step in **Dependencies**. |
+| FL-14 | MoEngage Glide | fail | moengage | `com.github.bumptech.glide:glide` in `android/app/build.gradle(.kts)` | Add Glide from **MoEngage**. |

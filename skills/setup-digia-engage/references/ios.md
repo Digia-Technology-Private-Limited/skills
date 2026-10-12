@@ -16,14 +16,13 @@ and resolution fails.
 | webengage | `https://github.com/Digia-Technology-Private-Limited/de_ios_webengage.git` | `DigiaEngageWebEngage` |
 
 Get the latest tag with `git ls-remote --tags <url>`. Edit `Package.swift`, or the Xcode project
-package references. Use CocoaPods only if the app has no SPM packages: then use the same URLs with
-`:git` and `:tag`.
+package references.
 
-The CEP plugin repositories need access. If `git ls-remote` returns 404 or an auth error, stop.
-Tell the user to ask info@digia.tech for access, then continue.
+If the app has a `Podfile` and no SPM packages, use CocoaPods: add `pod '<Product>'` (for example
+`pod 'DigiaMoEngage'`) and run `pod install`.
 
-Deployment target: iOS 17.0 with MoEngage or WebEngage, iOS 16.0 with CleverTap. If the target is
-lower, tell the user and ask before you raise it.
+Set the deployment target to iOS 15.0 or later. The SDK shows nothing below iOS 17.0. If the target
+is below 17.0, tell the user.
 
 ## Initialize and register
 
@@ -112,14 +111,14 @@ Get `topViewController` with the app's own helper. UIKit: call
 
 | ID | Rule | Severity | CEP | Detect | Fix |
 |---|---|---|---|---|---|
-| IO-01 | CEP plugin added, one core | fail | all | the CEP plugin URL, and no separate core package, in `Package.swift`, `project.pbxproj` or `Podfile` | Add **Dependencies**. |
+| IO-01 | CEP plugin added, one core | fail | all | the CEP plugin URL or pod, and no separate core package, in `Package.swift`, `project.pbxproj` or `Podfile` | Add **Dependencies**. |
 | IO-02 | Initialized at launch | fail | all | `try await Digia.initialize(` in the app launch code | Add **Initialize and register**. |
 | IO-03 | Real API key | fail | all | `apiKey:` value is not `YOUR_API_KEY` | Put the key from the Digia dashboard. |
 | IO-04 | One plugin registered, after `initialize` and the CEP SDK start | fail | all | exactly one `Digia.register(`, after `Digia.initialize(` and the CEP start call | Add the call from **Initialize and register**. |
 | IO-05 | Host present | fail | all | exactly one `DigiaHost` | Add **Host**. |
 | IO-06 | Screen tracking | fail | all | `Digia.setCurrentScreen(` or `digiaScreen(` | Add **Screen tracking**. |
 | IO-07 | Identity | warn | all | `Digia.setUserId(` and `Digia.clearUserId(` | Add **Identity**. |
-| IO-08 | Deployment target | fail | all | `IPHONEOS_DEPLOYMENT_TARGET` at or above the value in **Dependencies** | Raise it, with the user's approval. |
+| IO-08 | Deployment target | warn | all | `IPHONEOS_DEPLOYMENT_TARGET` at 17.0 or above | Tell the user that devices below iOS 17 show no campaigns. |
 | IO-09 | CleverTap native setup | fail | clevertap | `prepareCleverTapCustomTemplates()` before `CleverTap.autoIntegrate()`, `CleverTapAccountID` in `Info.plist` | Add the **CleverTap** step. |
 | IO-10 | WebEngage delegate | fail | webengage | `notificationDelegate: DigiaWebEngagePlugin.notificationDelegate` | Add the **WebEngage** step. |
 | IO-11 | Debug deeplink | warn | all | `digia-engage` in `CFBundleURLSchemes` and `Digia.handleDeepLink(` | Add **Debug deeplink**. |

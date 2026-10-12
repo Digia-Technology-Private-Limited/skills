@@ -1,10 +1,9 @@
 {
   "name": "digia-engage",
   "description": "Agent skills for integrating the Digia Engage SDK.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": { "name": "Digia Technology" },
   "homepage": "https://www.digia.tech/docs/developer",
   "repository": "https://github.com/Digia-Technology-Private-Limited/skills",
-  "license": "BUSL-1.1",
-  "skills": ["./skills/setup-digia-engage"]
+  "license": "BUSL-1.1"
 }

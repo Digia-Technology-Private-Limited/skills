@@ -30,13 +30,24 @@ connects your CEP, builds the app, and checks the result.
 
 ## Install
 
-Pick the line for your agent.
+Any agent (Claude Code, Codex, Cursor, OpenCode, GitHub Copilot, Gemini CLI, Windsurf and others):
+
+```sh
+npx skills add Digia-Technology-Private-Limited/skills -s setup-digia-engage
+```
+
+The command asks which agents to install for. Add `-g` to install for your user, not for the
+project.
+
+Or use the plugin system of your agent:
 
 | Agent | Command |
 |---|---|
 | Claude Code | `/plugin marketplace add Digia-Technology-Private-Limited/skills`<br>`/plugin install digia-engage@digia-engage` |
-| Codex | `codex plugin marketplace add Digia-Technology-Private-Limited/skills` |
-| Cursor, Copilot, OpenCode, Gemini CLI and others | `npx skills add Digia-Technology-Private-Limited/skills` |
+| Codex | `codex plugin marketplace add Digia-Technology-Private-Limited/skills`, then install Digia Engage from `/plugins` |
+| Cursor | Settings → Plugins → add from GitHub repository `Digia-Technology-Private-Limited/skills` |
+| GitHub Copilot CLI | `copilot plugin marketplace add Digia-Technology-Private-Limited/skills`<br>`copilot plugin install digia-engage@digia-engage` |
+| Gemini CLI | `gemini skills install https://github.com/Digia-Technology-Private-Limited/skills.git --path skills/setup-digia-engage` |
 
 ## Use
 
@@ -54,11 +65,11 @@ Pick the line for your agent.
 | Platform | CleverTap | MoEngage | WebEngage | Digia-managed |
 |---|:-:|:-:|:-:|:-:|
 | React Native | ✅ | ✅ | ✅ | ✅ |
-| Flutter | ✅ | ✅ | ✅ | — |
+| Flutter | ✅ ¹ | ✅ | ✅ | — |
 | Android | ✅ | ✅ (beta) | ✅ | — |
-| iOS | ✅ (beta) ¹ | ✅ (beta) ¹ | ✅ ¹ | — |
+| iOS | ✅ (beta) | ✅ (beta) | ✅ | — |
 
-¹ The iOS CEP plugin packages need access. Ask info@digia.tech.
+¹ Needs `digia_engage_clevertap` 2.0.0.
 
 ## After setup
 
