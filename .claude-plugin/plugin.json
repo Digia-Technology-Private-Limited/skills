@@ -1,7 +1,7 @@
 {
   "name": "digia-engage",
   "description": "Agent skills for integrating the Digia Engage SDK.",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "author": { "name": "Digia Technology" },
   "homepage": "https://www.digia.tech/docs/developer",
   "repository": "https://github.com/Digia-Technology-Private-Limited/skills",

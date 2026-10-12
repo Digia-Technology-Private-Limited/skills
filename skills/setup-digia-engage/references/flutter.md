@@ -11,6 +11,9 @@ Digia-managed campaigns are not available on Flutter yet: ask the user which CEP
 | moengage | `flutter pub add digia_engage:^2.1.0 digia_moengage_plugin:^2.0.0 moengage_flutter:^10.5.0` |
 | webengage | `flutter pub add digia_engage:^2.1.0 digia_webengage_plugin:^2.0.0 webengage_flutter:^1.7.0` |
 
+If pub cannot find `digia_engage_clevertap` 2.0.0, stop and tell the user. Do not use 1.x: it
+needs `digia_engage` 1.x.
+
 Then run `flutter pub upgrade dio`. `digia_engage` 2.1.0 does not compile with dio 5.9.0.
 
 The SDK needs Dart 3.6 and Flutter 3.29 or later.
@@ -118,7 +121,7 @@ such place, write it in `main`.
 
 ### CleverTap
 
-The Digia template registers itself on Android. Android still needs a custom `Application`
+The Digia template registers itself on both platforms. Android still needs a custom `Application`
 class: create `MainApplication.kt` next to `MainActivity.kt`, in the same package, and set
 `android:name=".MainApplication"` on `<application>`:
 
@@ -135,16 +138,19 @@ class MainApplication : FlutterApplication() {
 ```
 
 iOS `AppDelegate`, in `didFinishLaunchingWithOptions` before `return super.application(...)`.
-Import `CleverTapSDK` and `clevertap_plugin`:
+Import `CleverTapSDK`:
 
 ```swift
-CleverTapPluginCustomTemplates.registerCustomTemplates("DigiaTemplate")
 CleverTap.autoIntegrate()
 ```
 
+Do not call `CleverTapPluginCustomTemplates.registerCustomTemplates`. It does not compile with a
+plain string. The plugin already registers `DigiaTemplate`.
+
 Add the CleverTap account ID and token: `CLEVERTAP_ACCOUNT_ID` and `CLEVERTAP_TOKEN`
 `<meta-data>` in `AndroidManifest.xml`, and `CleverTapAccountID` and `CleverTapToken` in
-`Info.plist`. Ask the user for them. If they skip, write placeholders.
+`Info.plist`. Ask the user for them. If they skip, write placeholders. If the account has a
+region (for example `in1`), also add `CLEVERTAP_REGION` and `CleverTapRegion`.
 
 ### MoEngage
 
@@ -255,7 +261,7 @@ if (Digia.isDebugSettingsDeepLink(uri)) {
 | FL-06 | One `DigiaHost` in the app builder | fail | all | exactly one `DigiaHost(`, inside `builder:` | Add **Host and screen tracking**. |
 | FL-07 | Screen tracking | fail | all | `DigiaNavigatorObserver()` in `navigatorObservers` or GoRouter `observers`, or `Digia.setCurrentScreen(` | Add the observer. |
 | FL-08 | Identity | warn | all | `Digia.setUserId(` and `Digia.clearUserId(` | Add **Identity**. |
-| FL-09 | CleverTap native setup | fail | clevertap | `ActivityLifecycleCallback.register` in the Android `Application`, `registerCustomTemplates("DigiaTemplate")` before `CleverTap.autoIntegrate()` in `AppDelegate`, account ID on both platforms | Add the **CleverTap** steps. |
+| FL-09 | CleverTap native setup | fail | clevertap | `ActivityLifecycleCallback.register` in the Android `Application`, `CleverTap.autoIntegrate()` in `AppDelegate`, account ID on both platforms | Add the **CleverTap** steps. |
 | FL-10 | MoEngage started, same instance passed | fail | moengage | `MoEngagePlugin(instance:` with the initialised `MoEngageFlutter` | Add the **MoEngage** steps. |
 | FL-11 | WebEngage iOS delegate | fail | webengage | `DigiaDelegateProxy` held in a property and passed as `notificationDelegate` | Add the **WebEngage** steps. |
 | FL-12 | iOS debug deeplink scheme | warn | all | `digia-engage` in `ios/Runner/Info.plist` `CFBundleURLSchemes` | Add **Debug deeplink**. |
