@@ -21,7 +21,7 @@ package references.
 If the app has a `Podfile` and no SPM packages, use CocoaPods: add `pod '<Product>'` (for example
 `pod 'DigiaMoEngage'`) and run `pod install`.
 
-Deployment target: iOS 15.0 or later builds. The SDK shows nothing below iOS 17.0. If the target
+Set the deployment target to iOS 15.0 or later. The SDK shows nothing below iOS 17.0. If the target
 is below 17.0, tell the user.
 
 ## Initialize and register

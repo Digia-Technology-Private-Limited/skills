@@ -2,7 +2,7 @@
 
 ## 1.1.0
 
-- Flutter: pin the tested versions (`digia_engage` 2.1.0, the CEP plugins and their CEP SDKs), and
+- Flutter: pin the versions (`digia_engage` 2.1.0, the CEP plugins and their CEP SDKs), and
   upgrade `dio` after install.
 - Flutter CleverTap: use `digia_engage_clevertap` 2.0.0.
 - Android: use the callback form of `initialize`, and call `prepareCleverTapCustomTemplates()`

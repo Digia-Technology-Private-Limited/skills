@@ -54,8 +54,8 @@ Search the source for the Digia core package and a `Digia.initialize` call.
 
 Follow the stack reference, section by section, for this CEP:
 
-1. Add the dependencies with the command in the stack reference, at the versions it gives.
-   The stack reference is the authority for code.
+1. Add the dependencies as the stack reference says, at the versions it gives or from the source
+   it names. The stack reference is the authority for code.
 2. Ask the user for the Digia API key. If they skip, write `YOUR_API_KEY` and continue. Check
    then reports the key rule as a fail. Leave that fail for the user.
 3. Add initialize, plugin registration, host, screen tracking and the CEP native steps.
@@ -89,7 +89,7 @@ If any rule fails, offer to fix them. On yes, apply the fixes, build, and check 
 
 End with the next steps: run a live test from the Digia Engage Dashboard, and open SDK Debug
 Settings on the device (`digia-engage://_digia/debug-settings`). A CEP campaign shows only when
-the app sends its trigger event to the CEP, and the API key is from the Digia project that has
-that campaign. The log line `Dropped — not found in the campaign store` means the key is wrong.
+the app sends its trigger event to the CEP. The API key must be from the Digia project that has
+the campaign. The log line `Dropped — not found in the campaign store` usually means a wrong key.
 
 Done when every applicable rule has a result and the report is shown.

@@ -15,7 +15,7 @@ Then run `flutter pub upgrade dio`. `digia_engage` 2.1.0 does not compile with d
 
 The SDK needs Dart 3.6 and Flutter 3.29 or later.
 
-iOS: set the deployment target to 15.0 or later. Recent Xcode versions reject the `flutter create`
+iOS: set the deployment target to 15.0 or later. Xcode 27 rejects the `flutter create`
 default of 13.0. In `ios/Podfile`, set `platform :ios, '15.0'`, and set
 `IPHONEOS_DEPLOYMENT_TARGET = 15.0` in `ios/Runner.xcodeproj/project.pbxproj`. If pods still
 report 13.0, add this inside the Podfile's `post_install` loop, after
@@ -28,7 +28,9 @@ end
 ```
 
 `flutter build ios` shows the deployment target error only as a warning. It then prints
-"Encountered error while building for simulator". Campaigns show from iOS 17.0.
+"Encountered error while building for simulator".
+
+Campaigns show from iOS 17.0.
 
 Keep the app's own CEP SDK. The Digia plugins do not support the next major CEP SDK version
 (`clevertap_plugin` 4, `moengage_flutter` 11, `webengage_flutter` 2). If the app already uses one,
