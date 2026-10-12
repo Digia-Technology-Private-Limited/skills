@@ -51,7 +51,8 @@ Start the CEP SDK before `register`. Register one plugin.
 - CleverTap: before `register`, call `DigiaCleverTapPlugin.prepareCleverTapCustomTemplates()`
   then `CleverTap.autoIntegrate()`. Add `CleverTapAccountID` and `CleverTapToken` to
   `Info.plist`. Ask the user for them. If they skip, write `YOUR_CLEVERTAP_ACCOUNT_ID` and
-  `YOUR_CLEVERTAP_TOKEN`.
+  `YOUR_CLEVERTAP_TOKEN`. If the account has a region (for example `in1`), also add
+  `CleverTapRegion`.
 - MoEngage: start MoEngage with `MoEngage.sharedInstance.initializeDefaultInstance(...)` as its
   docs say, before `register`.
 - WebEngage: start WebEngage with the Digia delegate. WebEngage accepts one delegate, at start only:

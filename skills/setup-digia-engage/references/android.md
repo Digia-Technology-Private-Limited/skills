@@ -51,7 +51,8 @@ If the app has no `Application` class, create one and set `android:name` on `<ap
 - CleverTap: call `DigiaCleverTapPlugin.prepareCleverTapCustomTemplates()` before CleverTap
   starts. Without it, CleverTap drops every Digia campaign. Add `CLEVERTAP_ACCOUNT_ID` and
   `CLEVERTAP_TOKEN` `<meta-data>` to `AndroidManifest.xml`. Ask the user for them. If they skip,
-  write `YOUR_CLEVERTAP_ACCOUNT_ID` and `YOUR_CLEVERTAP_TOKEN`.
+  write `YOUR_CLEVERTAP_ACCOUNT_ID` and `YOUR_CLEVERTAP_TOKEN`. If the account has a region
+  (for example `in1`), also add `CLEVERTAP_REGION`.
 - MoEngage: `MoEngage.initialiseDefaultInstance(MoEngage.Builder(this, "YOUR_MOENGAGE_APP_ID").build())`
   before `register`.
   Add `com.github.bumptech.glide:glide:4.16.0` to the app module. Without it, MoEngage stops the app
