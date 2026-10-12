@@ -1,6 +1,7 @@
 {
   "name": "digia-engage",
   "owner": { "name": "Digia Technology" },
+  "description": "Digia Engage agent skills: add the Digia Engage SDK to a mobile app, or check an existing integration.",
   "plugins": [
     {
       "name": "digia-engage",

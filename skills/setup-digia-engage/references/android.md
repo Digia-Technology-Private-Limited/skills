@@ -23,14 +23,16 @@ Keep the app's own CEP SDK. The SDK needs `minSdk` 24 or later.
 
 ## Initialize and register
 
-In `Application.onCreate`:
+In `Application.onCreate`. Use the callback form: the two-argument `initialize` is a `suspend`
+function. Do not wrap it in `runBlocking`.
 
 ```kotlin
 class App : Application() {
     override fun onCreate() {
-        ActivityLifecycleCallback.register(this) // CleverTap only, before super.onCreate()
+        DigiaCleverTapPlugin.prepareCleverTapCustomTemplates() // CleverTap only, first line
+        ActivityLifecycleCallback.register(this)               // CleverTap only
         super.onCreate()
-        Digia.initialize(applicationContext, DigiaConfig(apiKey = "YOUR_API_KEY"))
+        Digia.initialize(applicationContext, DigiaConfig(apiKey = "YOUR_API_KEY")) { _ -> }
         Digia.register(DigiaCleverTapPlugin(applicationContext))
     }
 }
@@ -49,11 +51,14 @@ If the app has no `Application` class, create one and set `android:name` on `<ap
 
 ## CEP native steps
 
-- CleverTap: the plugin registers the Digia template itself. Add `CLEVERTAP_ACCOUNT_ID` and
+- CleverTap: call `DigiaCleverTapPlugin.prepareCleverTapCustomTemplates()` before CleverTap
+  starts. Without it, CleverTap drops every Digia campaign. Add `CLEVERTAP_ACCOUNT_ID` and
   `CLEVERTAP_TOKEN` `<meta-data>` to `AndroidManifest.xml`. Ask the user for them. If they skip,
   write `YOUR_CLEVERTAP_ACCOUNT_ID` and `YOUR_CLEVERTAP_TOKEN`.
 - MoEngage: `MoEngage.initialiseDefaultInstance(MoEngage.Builder(this, "YOUR_MOENGAGE_APP_ID").build())`
   before `register`.
+  Add `com.github.bumptech.glide:glide` to the app module. Without it, MoEngage stops the app
+  when an in-app campaign with an image arrives.
 - WebEngage: start WebEngage as its docs say, before `register`.
 
 ## Host
@@ -80,13 +85,7 @@ Next to the app's login and logout code: `Digia.setUserId(user.id)`, then on log
 
 ## Debug deeplink
 
-The app routes the link. Add an intent filter for the `digia-engage` scheme to the launcher
-activity, then in `onCreate` and `onNewIntent`:
-
-```kotlin
-intent?.data?.let { if (Digia.handleDeepLink(this, it)) return }
-```
-
+No step. The SDK declares the `digia-engage://_digia/debug-settings` link in its own manifest.
 It opens in debuggable builds only. Test with
 `adb shell am start -a android.intent.action.VIEW -d "digia-engage://_digia/debug-settings" <package>`.
 
@@ -105,5 +104,6 @@ It opens in debuggable builds only. Test with
 | AN-05 | Host present | fail | all | `DigiaHost {` or `DigiaHostView` | Add **Host**. |
 | AN-06 | Screen tracking | fail | all | `DigiaScreen(` or `digiaScreen(` or `Digia.setCurrentScreen(` | Add **Screen tracking**. |
 | AN-07 | Identity | warn | all | `Digia.setUserId(` and `Digia.clearUserId(` | Add **Identity**. |
-| AN-08 | CleverTap native setup | fail | clevertap | `ActivityLifecycleCallback.register(this)` before `super.onCreate()`, account ID in `AndroidManifest.xml` | Add the **CleverTap** step. |
-| AN-09 | Debug deeplink routed | warn | all | `Digia.handleDeepLink(` and a `digia-engage` intent filter | Add **Debug deeplink**. |
+| AN-08 | CleverTap native setup | fail | clevertap | `DigiaCleverTapPlugin.prepareCleverTapCustomTemplates()` first in `onCreate`, `ActivityLifecycleCallback.register(this)` before `super.onCreate()`, account ID in `AndroidManifest.xml` | Add the **CleverTap** step. |
+| AN-09 | Callback form of `initialize` | fail | all | `Digia.initialize(` with a trailing callback, and no `runBlocking` around it | Use the call from **Initialize and register**. |
+| AN-10 | MoEngage Glide | warn | moengage | `com.github.bumptech.glide:glide` in the app module or version catalog | Add Glide from the **MoEngage** step. |

@@ -1,0 +1,11 @@
+{
+  "name": "digia-engage",
+  "owner": { "name": "Digia Technology" },
+  "plugins": [
+    {
+      "name": "digia-engage",
+      "source": "./",
+      "description": "Integrate the Digia Engage SDK, or check an existing integration."
+    }
+  ]
+}
