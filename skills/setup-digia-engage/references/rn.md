@@ -22,6 +22,8 @@ it is already there.
 
 Also install `react-native-svg` and `@react-native-async-storage/async-storage`. They autolink
 only when they are in the app's `package.json`.
+Do not change the version of a package that the app already has. If the app has
+`react-native-svg` below 15.8, tell the user that Digia needs 15.8 or later, and leave the version.
 
 iOS: run `pod install` in `ios/`. Xcode 27 rejects pod targets below iOS 15.0. Add this inside
 the Podfile's `post_install`, after `react_native_post_install(...)`:
@@ -100,6 +102,29 @@ const navigationRef = createNavigationContainerRef<ParamListBase>();
 
 With no navigation library, call `Digia.setCurrentScreen(name)` in a `useEffect` that runs when
 the visible screen changes.
+
+## Anchors and slots
+
+An anchor marks the view that a tooltip or spotlight points at. A slot shows inline content
+(banner, card, story). Import both from
+`@digia-engage/core`.
+
+Anchors: by default, wrap the icon of each bottom tab. Make the key from the tab name, in
+snake_case. React Navigation:
+
+```tsx
+options={{
+  tabBarIcon: ({ color, size }) => (
+    <DigiaAnchorView anchorKey="nav_home"><Icon name="home" color={color} size={size} /></DigiaAnchorView>
+  ),
+}}
+```
+
+Slots: find the screens with static content, for example a home, offers or profile screen. Propose
+one place on each: `<DigiaSlotView placementKey="home_banner" />`. Add a slot only when the user
+agrees.
+
+Give the user the list of keys. The marketer selects the same keys in the Digia dashboard.
 
 ## Identity
 
@@ -199,7 +224,7 @@ if (Digia.isDebugSettingsDeepLink(url)) { Digia.handleDeepLink(url); return; }
 | RN-11 | MoEngage started | fail | moengage | `ReactMoE.initialize(` | Add the **MoEngage** step. |
 | RN-12 | WebEngage iOS delegate | fail | webengage | `WEDigiaSuppressProxy.shared()` in `AppDelegate` | Add the **WebEngage** step. |
 | RN-13 | iOS debug deeplink scheme | warn | all | `digia-engage` in `CFBundleURLSchemes` | Add **Debug deeplink**. |
-| RN-14 | CleverTap pin | fail | clevertap | `clevertap-react-native` is `4.3.1` in `package.json` | Install `clevertap-react-native@4.3.1`. |
+| RN-14 | CleverTap pin | warn | clevertap | `clevertap-react-native` is `4.3.1` in `package.json` | New install: install `4.3.1`. Existing version: tell the user, and change it only with consent. |
 | RN-15 | MoEngage Glide | warn | moengage | `com.github.bumptech.glide:glide` in `android/app/build.gradle(.kts)` | Add Glide from the **MoEngage** step. |
-| RN-16 | MoEngage SDK version | fail | moengage | `react-native-moengage` is `^12.5.0` or a later 12.x in `package.json` | Install `react-native-moengage@^12.5.0`. |
-| RN-17 | WebEngage SDK version | fail | webengage | `react-native-webengage` is `^1.6.2` or a later 1.x in `package.json` | Install `react-native-webengage@^1.6.2`. |
+| RN-16 | MoEngage SDK version | warn | moengage | `react-native-moengage` is `^12.5.0` or a later 12.x in `package.json` | New install: install `^12.5.0`. Existing version: tell the user, and change it only with consent. |
+| RN-17 | WebEngage SDK version | warn | webengage | `react-native-webengage` is `^1.6.2` or a later 1.x in `package.json` | New install: install `^1.6.2`. Existing version: tell the user, and change it only with consent. |

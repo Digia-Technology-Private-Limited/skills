@@ -83,6 +83,23 @@ SwiftUI: call `Digia.setCurrentScreen(name: "home")` in `.onAppear` of each scre
 `digiaScreen("home")` in `viewDidAppear`. The names must match the screen names in the Digia
 dashboard, case included.
 
+## Anchors and slots
+
+An anchor marks the view that a tooltip or spotlight points at. A slot shows inline content
+(banner, card, story).
+
+Anchors: by default, wrap each item of the app's bottom tab bar. Make the key from the item label,
+in snake_case: `DigiaAnchor(anchorKey: "nav_home") { TabButton(...) }`. A system `TabView` or
+`UITabBar` draws its items in UIKit, so they cannot be wrapped: tell the user, and propose anchors
+on the main buttons instead. UIKit: put the target view inside a `DigiaAnchorView` with `anchorKey`,
+as its first subview.
+
+Slots: find the screens with static content, for example a home, offers or profile screen. Propose
+one place on each: `DigiaSlot("home_banner")`. UIKit: host it with `UIHostingController`. Add a
+slot only when the user agrees.
+
+Give the user the list of keys. The marketer selects the same keys in the Digia dashboard.
+
 ## Identity
 
 Next to the app's login and logout code: `Digia.setUserId(user.id)`, then on logout

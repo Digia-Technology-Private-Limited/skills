@@ -14,7 +14,21 @@ Digia-managed campaigns are not available on Flutter yet: ask the user which CEP
 If pub cannot find `digia_engage_clevertap` 2.0.0, stop and tell the user. Do not use 1.x: it
 needs `digia_engage` 1.x.
 
-Then run `flutter pub upgrade dio`. `digia_engage` 2.1.0 does not compile with dio 5.9.0.
+Do not change the version of a package that is already in the app's `pubspec.yaml`. `digia_engage`
+2.1.0 needs these major versions: `flutter_svg` 2, `share_plus` 11, `package_info_plus` 8,
+`carousel_slider` 5, `lottie` 3, `uuid` 4, and dio 5.9.1 or later (it does not compile with dio
+5.9.0). If `pub add` fails on one of them, it adds nothing. Then add the Digia lines to
+`dependencies` by hand, and add a `dependency_overrides` entry with the version Digia needs, with
+a comment:
+
+```yaml
+dependency_overrides:
+  # Digia Engage needs flutter_svg 2. The app declares ^1.1.6.
+  flutter_svg: ^2.0.17
+```
+
+App code that uses the old API can then fail, for example `precachePicture` in `flutter_svg` 1.
+Do not change that code. Tell the user each override and each error it causes.
 
 The SDK needs Dart 3.6 and Flutter 3.29 or later.
 
@@ -35,9 +49,10 @@ end
 
 Campaigns show from iOS 17.0.
 
-Keep the app's own CEP SDK. The Digia plugins do not support the next major CEP SDK version
-(`clevertap_plugin` 4, `moengage_flutter` 11, `webengage_flutter` 2). If the app already uses one,
-tell the user, and ask before you lower it to the range in the command.
+If the app already has the CEP SDK, leave it out of the command, so its version stays. The Digia
+plugins do not support the next major CEP SDK version (`clevertap_plugin` 4, `moengage_flutter` 11,
+`webengage_flutter` 2). If the app uses one, tell the user that the plugin needs the range in the
+command, and ask before you add an override for it.
 
 Imports:
 
@@ -82,24 +97,47 @@ Register one plugin. A second `register` replaces the first.
 ## Host and screen tracking
 
 ```dart
-final navigatorKey = GlobalKey<NavigatorState>();
-
 MaterialApp(
-  navigatorKey: navigatorKey,
   navigatorObservers: [DigiaNavigatorObserver()],
-  builder: (context, child) => DigiaHost(navigatorKey: navigatorKey, child: child!),
+  builder: (context, child) => DigiaHost(child: child!),
 )
 ```
 
-GoRouter: `GoRouter(navigatorKey: navigatorKey, observers: [DigiaNavigatorObserver()])` and
-`MaterialApp.router(builder: ...)` with the same `DigiaHost`. Each `ShellRoute` needs its own
-observer.
+The observer gives the SDK the app's navigator. Do not add a navigator key. If the app already
+passes a `navigatorKey` to `MaterialApp`, also pass it: `DigiaHost(navigatorKey: navigatorKey, ...)`.
+
+GoRouter: `GoRouter(observers: [DigiaNavigatorObserver()])` and `MaterialApp.router(builder: ...)`
+with the same `DigiaHost`. Each `ShellRoute` needs its own observer. With shell routes, pass the
+root navigator key to `DigiaHost` too, so the SDK shows nudges above the shell.
 
 The observer reports `route.settings.name`. Give each route a `name`. For tabs in one route, call
 `Digia.setCurrentScreen('tab_name')` on tab change. The names must match the screen names in the
 Digia dashboard, case included.
 
 Mount one `DigiaHost`. Two hosts show each nudge twice.
+
+## Anchors and slots
+
+An anchor marks the widget that a tooltip or spotlight points at. A slot shows inline content
+(banner, card, story) and takes no space when no campaign is live.
+
+Anchors: by default, wrap the icon of each bottom navigation item. Make the key from the item
+label, in snake_case:
+
+```dart
+BottomNavigationBarItem(
+  icon: DigiaAnchor(anchorKey: 'nav_home', child: const Icon(Icons.home)),
+  label: 'Home',
+)
+```
+
+Material 3: `NavigationDestination(icon: DigiaAnchor(anchorKey: 'nav_home', child: const Icon(Icons.home)), label: 'Home')`.
+
+Slots: find the screens with static content, for example a home, offers or profile screen. Propose
+one place on each, for example `DigiaSlot('home_banner')` below the header. Add a slot only when
+the user agrees.
+
+Give the user the list of keys. The marketer selects the same keys in the Digia dashboard.
 
 ## Identity
 
@@ -238,10 +276,13 @@ If `app_links`, `uni_links` or `go_router` handles incoming URLs, forward the Di
 
 ```dart
 if (Digia.isDebugSettingsDeepLink(uri)) {
-  Digia.openDebugSettings(navigatorKey.currentContext!);
+  Digia.openDebugSettings(context);
   return;
 }
 ```
+
+Use a `context` below the app's `Navigator`, for example the context of the current screen. If the
+app has a `navigatorKey`, use `navigatorKey.currentContext!`.
 
 ## Build
 
