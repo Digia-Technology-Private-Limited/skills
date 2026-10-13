@@ -76,6 +76,32 @@ Compose: call `DigiaScreen("home")` in each screen composable. Views: call `digi
 in `onResume` of each activity or fragment. The names must match the screen names in the Digia
 dashboard, case included.
 
+## Anchors and slots
+
+An anchor marks the view that a tooltip or spotlight points at. A slot shows inline content
+(banner, card, story).
+
+Anchors: by default, wrap the icon of each bottom navigation item. Make the key from the item
+label, in snake_case. Compose:
+
+```kotlin
+NavigationBarItem(
+    icon = { DigiaAnchor("nav_home") { Icon(Icons.Default.Home, null) } },
+    label = { Text("Home") }, selected = selected, onClick = onClick,
+)
+```
+
+Views: wrap the target as the single child of `com.digia.engage.DigiaAnchorView` with
+`app:anchorKey`. The items of a menu-based `BottomNavigationView` cannot be wrapped: tell the user,
+and propose anchors on the main buttons instead.
+
+Slots: find the screens with static content, for example a home, offers or profile screen. Propose
+one place on each. Compose: `DigiaSlot("home_banner")`. Views:
+`<com.digia.engage.DigiaSlotView app:placementKey="home_banner" android:layout_width="match_parent"
+android:layout_height="wrap_content" />`. Add a slot only when the user agrees.
+
+Give the user the list of keys. The marketer selects the same keys in the Digia dashboard.
+
 ## Identity
 
 Next to the app's login and logout code: `Digia.setUserId(user.id)`, then on logout

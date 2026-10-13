@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.2.0
+
+- Do not build the app after the integration. Ask the user if they want help to build.
+- Add anchors to the bottom navigation by default. Propose slots on screens with static content.
+- Show the commands that open SDK Debug Settings on Android and iOS.
+- Flutter: use `DigiaNavigatorObserver` alone. Pass a `navigatorKey` to `DigiaHost` only when the
+  app already has one.
+- Do not change the version of a package that the app already has. Flutter: add
+  `dependency_overrides` and list each one in the summary.
+- Add a short comment at each change in the app's code that says why.
+- Run the static check, and tell the user each problem that the changes cause.
+
 ## 1.1.1
 
 - CleverTap: add the account region. Flutter iOS needs only `CleverTap.autoIntegrate()`; the
