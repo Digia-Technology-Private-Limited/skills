@@ -61,7 +61,7 @@ A sandbox API key also needs `environment: 'sandbox'` in the `initialize` config
 | clevertap | `Digia.register(new DigiaCleverTapPlugin({ cleverTap: createCleverTapClient(CleverTap) }))` |
 | moengage | `Digia.register(new DigiaMoEngagePlugin({ moEngage: ReactMoE }))`, with `import ReactMoE from 'react-native-moengage'` and `DigiaMoEngagePlugin` from `@digia-engage/moengage` |
 | webengage | `Digia.register(new DigiaWebEngagePlugin())` from `@digia-engage/webengage` |
-| digia | `Digia.enableManagedCampaigns()` |
+| digia | no plugin and no extra call |
 
 Register one plugin. With `digia`, register no plugin.
 
@@ -189,10 +189,10 @@ if (Digia.isDebugSettingsDeepLink(url)) { Digia.handleDeepLink(url); return; }
 |---|---|---|---|---|---|
 | RN-01 | Core package installed | fail | all | `@digia-engage/core` in `package.json` | Install it. |
 | RN-02 | CEP plugin and CEP SDK installed | fail | clevertap, moengage, webengage | both packages from **Dependencies** in `package.json` | Install the pair. |
-| RN-03 | `initialize` is awaited before `register` | fail | all | `await Digia.initialize(` before `Digia.register(` or `enableManagedCampaigns(` | Move the call after the awaited `initialize`. |
+| RN-03 | `initialize` is awaited before `register` | fail | all | `await Digia.initialize(` before `Digia.register(` | Move the call after the awaited `initialize`. |
 | RN-04 | Real API key | fail | all | `apiKey:` value is not `YOUR_API_KEY` | Put the key from the Digia dashboard. |
 | RN-05 | One `<DigiaHost />`, last child of the root | fail | all | exactly one `<DigiaHost` in the source | Add it after the navigator. |
-| RN-06 | One plugin registered, or managed campaigns on | fail | all | one `Digia.register(`; for `digia`, `Digia.enableManagedCampaigns()` and no `register` | Add the call from **Initialize and register**. |
+| RN-06 | One plugin registered, or none for `digia` | fail | all | one `Digia.register(`; for `digia`, no `register` | Add the call from **Initialize and register**. |
 | RN-07 | Screen tracking | fail | all | `Digia.setCurrentScreen(` | Add **Screen tracking**. |
 | RN-08 | Identity | warn | all | `Digia.setUserId(` and `Digia.clearUserId(` | Add **Identity**. |
 | RN-10 | CleverTap native setup | fail | clevertap | `ActivityLifecycleCallback.register` in `MainApplication`, `CleverTap.autoIntegrate` in `AppDelegate`, account ID on both platforms | Add the **CleverTap** steps. |
