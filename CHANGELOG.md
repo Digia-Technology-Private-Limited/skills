@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.1
+
+- React Native and Flutter with no CleverTap, MoEngage or WebEngage: use Digia's own campaigns
+  and do not ask. Other CEPs count as none found.
+
 ## 1.3.0
 
 - Ask at the start, in one prompt: Digia with the CEP found, or Digia with its own campaigns
