@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.1
+
+- Flutter CleverTap: `digia_engage_clevertap` 2.0.0 is on pub.dev. Flutter × CleverTap is supported.
+
 ## 1.2.0
 
 - Flutter: add Digia-managed campaigns (`digia`) with `digia_engage` 2.2.0: no plugin,
