@@ -33,7 +33,7 @@ import DigiaEngage
 import DigiaEngageCleverTap
 
 Task {
-    try await Digia.initialize(DigiaConfig(apiKey: "YOUR_API_KEY"))
+    try await Digia.initialize(DigiaConfig(apiKey: "digia_xxx"))
     Digia.register(DigiaCleverTapPlugin())
 }
 ```
@@ -131,7 +131,7 @@ Get `topViewController` with the app's own helper. UIKit: call
 |---|---|---|---|---|---|
 | IO-01 | CEP plugin added, one core | fail | all | the CEP plugin URL or pod, and no separate core package, in `Package.swift`, `project.pbxproj` or `Podfile` | Add **Dependencies**. |
 | IO-02 | Initialized at launch | fail | all | `try await Digia.initialize(` in the app launch code | Add **Initialize and register**. |
-| IO-03 | Real API key | fail | all | `apiKey:` value is not `YOUR_API_KEY` | Put the key from the Digia dashboard. |
+| IO-03 | Real API key | fail | all | `apiKey:` value is not `digia_xxx` | Put the key from the Digia dashboard. |
 | IO-04 | One plugin registered, after `initialize` and the CEP SDK start | fail | all | exactly one `Digia.register(`, after `Digia.initialize(` and the CEP start call | Add the call from **Initialize and register**. |
 | IO-05 | Host present | fail | all | exactly one `DigiaHost` | Add **Host**. |
 | IO-06 | Screen tracking | fail | all | `Digia.setCurrentScreen(` or `digiaScreen(` | Add **Screen tracking**. |

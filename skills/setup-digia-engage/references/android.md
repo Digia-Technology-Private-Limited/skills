@@ -29,7 +29,7 @@ class App : Application() {
         DigiaCleverTapPlugin.prepareCleverTapCustomTemplates() // CleverTap only, first line
         ActivityLifecycleCallback.register(this)               // CleverTap only
         super.onCreate()
-        Digia.initialize(applicationContext, DigiaConfig(apiKey = "YOUR_API_KEY")) { _ -> }
+        Digia.initialize(applicationContext, DigiaConfig(apiKey = "digia_xxx")) { _ -> }
         Digia.register(DigiaCleverTapPlugin(applicationContext))
     }
 }
@@ -123,7 +123,7 @@ It opens in debuggable builds only. Test with
 |---|---|---|---|---|---|
 | AN-01 | Core and CEP plugin added | fail | all | `tech.digia:engage` and `tech.digia:engage-<cep>` in Gradle files or the version catalog | Add **Dependencies**. |
 | AN-02 | Initialized in `Application.onCreate` | fail | all | `Digia.initialize(` in the class named by `android:name` | Add **Initialize and register**. |
-| AN-03 | Real API key | fail | all | `apiKey =` value is not `YOUR_API_KEY` | Put the key from the Digia dashboard. |
+| AN-03 | Real API key | fail | all | `apiKey =` value is not `digia_xxx` | Put the key from the Digia dashboard. |
 | AN-04 | One plugin registered, after `initialize` and the CEP SDK start | fail | all | exactly one `Digia.register(`, after `Digia.initialize(` and the CEP start call | Add the call from **Initialize and register**. |
 | AN-05 | Host present | fail | all | `DigiaHost {` or `DigiaHostView` | Add **Host**. |
 | AN-06 | Screen tracking | fail | all | `DigiaScreen(` or `digiaScreen(` or `Digia.setCurrentScreen(` | Add **Screen tracking**. |
