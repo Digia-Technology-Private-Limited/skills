@@ -72,7 +72,7 @@ In `main`, before `runApp`:
 ```dart
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Digia.initialize(DigiaConfig(apiKey: 'YOUR_API_KEY'));
+  await Digia.initialize(DigiaConfig(apiKey: 'digia_xxx'));
   Digia.register(DigiaCleverTapPlugin());
   runApp(const MyApp());
 }
@@ -91,7 +91,7 @@ instance to the plugin. You also start MoEngage natively (**CEP native steps**).
 ```dart
 final moEngage = MoEngageFlutter('YOUR_MOENGAGE_APP_ID');
 moEngage.initialise();
-await Digia.initialize(DigiaConfig(apiKey: 'YOUR_API_KEY'));
+await Digia.initialize(DigiaConfig(apiKey: 'digia_xxx'));
 Digia.register(MoEngagePlugin(instance: moEngage));
 ```
 
@@ -325,7 +325,7 @@ app has a `navigatorKey`, use `navigatorKey.currentContext!`.
 | FL-01 | Core package added | fail | all | `digia_engage:` in `pubspec.yaml` | Run **Dependencies**. |
 | FL-02 | CEP plugin and CEP SDK added | fail | clevertap, moengage, webengage | both packages from **Dependencies** in `pubspec.yaml` | Add the pair. |
 | FL-03 | `initialize` is awaited before `register` and `runApp` | fail | all | `await Digia.initialize(` in `main`, before `Digia.register(` (if any) and `runApp(` | Move the calls into that order. |
-| FL-04 | Real API key | fail | all | `apiKey:` value is not `YOUR_API_KEY` | Put the key from the Digia dashboard. |
+| FL-04 | Real API key | fail | all | `apiKey:` value is not `digia_xxx` | Put the key from the Digia dashboard. |
 | FL-05 | One plugin registered | fail | clevertap, moengage, webengage | exactly one `Digia.register(` | Add the call from **Initialize and register**. |
 | FL-15 | No stray plugin | fail | digia | no `Digia.register(` | Remove the call, or ask the user which CEP to use. |
 | FL-16 | App events sent | warn | digia | at least one `Digia.trackEvent(` | Add **Digia-managed campaigns**. |

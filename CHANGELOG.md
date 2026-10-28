@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.3.0
+
+- Ask at the start, in one prompt: Digia with the CEP found, or Digia with its own campaigns
+  (trigger + data), on React Native and Flutter; and the Digia API key, which the user can skip.
+- API key placeholder is now `digia_xxx`.
+- The summary lists each dependency override (app's version, Digia's version, why) and each static
+  check error with its cause and fix.
+- Do not stop for untracked agent skill folders such as `.agents/`, which installing the skill
+  can create.
+- README: install for Cursor with no files in the app's repository.
+
 ## 1.2.1
 
 - Flutter CleverTap: `digia_engage_clevertap` 2.0.0 is on pub.dev. Flutter × CleverTap is supported.

@@ -23,10 +23,11 @@
 
 Digia Engage lets your growth team ship nudges, bottom sheets, coachmarks, quizzes, scratch
 cards and NPS surveys to your app with no code and no app release. It runs on the CEP you
-already use: CleverTap, MoEngage or WebEngage.
+already use (CleverTap, MoEngage or WebEngage), or with its own campaigns on React Native and
+Flutter.
 
 The `setup-digia-engage` skill does the integration for you. Your coding agent adds the SDK,
-connects your CEP, builds the app, and checks the result.
+connects your CEP or Digia's own campaigns, and checks the result. It does not build the app.
 
 ## Install
 
@@ -36,8 +37,18 @@ Any agent (Claude Code, Codex, Cursor, OpenCode, GitHub Copilot, Gemini CLI, Win
 npx skills add Digia-Technology-Private-Limited/skills -s setup-digia-engage
 ```
 
-The command asks which agents to install for. Add `-g` to install for your user, not for the
-project.
+Run it in a terminal. The command asks which agents to install for. Add `-g` to install for
+your user, not for the project.
+
+Cursor, with no files added to your app's repository:
+
+```sh
+npx skills add Digia-Technology-Private-Limited/skills -s setup-digia-engage -a cursor -g -y
+```
+
+If you paste the command into the agent chat instead, the agent can install the skill into the
+project, in `.agents/skills/`. That works too. The skill ignores that folder when it checks for
+uncommitted changes. Commit the folder or add it to `.gitignore`.
 
 Or use the plugin system of your agent:
 
@@ -57,7 +68,7 @@ Or use the plugin system of your agent:
 
 | Your app | What the skill does |
 |---|---|
-| Has no Digia Engage | Detects your platform and CEP, asks for your Digia API key, adds the SDK, checks the result, then offers to help build the app. |
+| Has no Digia Engage | Detects your platform and CEP. Asks whether to use your CEP or Digia's own campaigns, and asks for your Digia API key (you can add it later). Adds the SDK, checks the result, lists each dependency override and each problem it causes, then offers to help build the app. |
 | Has Digia Engage | Checks the integration and reports each issue with its file, line and fix. It offers to fix them. |
 
 ## Supported setups

@@ -9,9 +9,11 @@ The **Check** table in the stack reference defines what a correct integration is
 
 ## 1. Guard the working tree
 
-Run `git status --porcelain` in the app root.
+Run `git status --porcelain` in the app root. Ignore untracked agent skill folders, such as
+`.agents/`, `.claude/skills/`, `.cursor/skills/` and `.windsurf/skills/`. Installing this skill
+can create them. Tell the user they can commit them or add them to `.gitignore`.
 
-- Output is not empty: stop. Ask the user to commit or stash, then wait.
+- Other output: stop. Ask the user to commit or stash, then wait.
 - No Git repository: tell the user that you cannot show a clean diff, and ask to continue.
 
 Done when the tree is clean, or the user has said to continue.
@@ -29,11 +31,17 @@ Detect the **stack** from the app root:
 
 Detect the **CEP** from dependencies: CleverTap, MoEngage or WebEngage SDK packages.
 
-- One CEP SDK found: use it.
-- Two found: ask the user which one Digia Engage uses.
-- None found on React Native or Flutter: ask whether to use Digia-managed campaigns (`digia`) or
-  to add a CEP.
-- None found on Android or iOS: ask which CEP to use.
+The app already calls `Digia.initialize`: take the CEP from the registered Digia plugin, or
+`digia` if there is none, and ask nothing.
+
+Else ask the user, in one prompt. Use your question tool if you have one (for example
+`AskUserQuestion`), else ask in chat and wait:
+
+- React Native or Flutter: which setup to use. Offer **Digia with <the CEP you found>** (one
+  option for each CEP found) and **Digia with its own campaigns (trigger + data)**, which is
+  `digia`. No CEP found: offer `digia` and adding a CEP.
+- Android or iOS: one CEP found, use it. Two found, ask which one. None found, ask which CEP to add.
+- The Digia API key, if they have one. They can skip it and add it later.
 
 Read the stack reference now. Done when stack and CEP are both known.
 
@@ -57,7 +65,7 @@ Follow the stack reference, section by section, for this CEP:
 
 1. Add the dependencies as the stack reference says, at the versions it gives or from the source
    it names. The stack reference is the authority for code.
-2. Ask the user for the Digia API key. If they skip, write `YOUR_API_KEY` and continue. Check
+2. Write the API key from step 2. If the user skipped it, write `digia_xxx` and continue. Check
    then reports the key rule as a fail. Leave that fail for the user.
 3. Add initialize, plugin registration, host, screen tracking and the CEP native steps.
 4. Add anchors to the bottom navigation, and propose slots, as **Anchors and slots** in the stack
@@ -77,8 +85,20 @@ Follow the stack reference, section by section, for this CEP:
 
 Do not build the app. A build can need signing, native tools or secrets that only the user has.
 
-Show a short diff summary: each file changed, and why. List the anchor and slot keys, each
-override, and each problem from the static check. Then run step 6 on the result.
+Show a short summary with these parts. Leave out a part that has nothing in it:
+
+- **Files changed**: each file, and why.
+- **Anchors and slots**: each key and where it is.
+- **Dependency overrides**: one line each, `<package>: app has <version>, Digia needs
+  <version>, overridden to <version>`, and why Digia needs it, for example "digia_engage 2.2.0
+  needs connectivity_plus 6 or 7". Say that the override can break code that uses the old version.
+- **Static check**: each error or warning that your change or an override causes, with its file,
+  the cause and a fix, for example "`lib/splash.dart:12` — `precachePicture` was removed in
+  flutter_svg 2, which the override brings in. Fix: use the flutter_svg 2 API." An error in a
+  file you did not change, with no overridden package, was likely there before: say so.
+- **API key**: if you wrote `digia_xxx`, say where to put the real key.
+
+Then run step 6 on the result.
 
 Done when the diff summary is shown.
 

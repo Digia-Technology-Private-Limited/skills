@@ -52,7 +52,7 @@ import { Digia } from '@digia-engage/core';
 import CleverTap from 'clevertap-react-native';
 import { DigiaCleverTapPlugin, createCleverTapClient } from '@digia-engage/clevertap';
 
-await Digia.initialize({ apiKey: 'YOUR_API_KEY' });
+await Digia.initialize({ apiKey: 'digia_xxx' });
 Digia.register(new DigiaCleverTapPlugin({ cleverTap: createCleverTapClient(CleverTap) }));
 ```
 
@@ -215,7 +215,7 @@ if (Digia.isDebugSettingsDeepLink(url)) { Digia.handleDeepLink(url); return; }
 | RN-01 | Core package installed | fail | all | `@digia-engage/core` in `package.json` | Install it. |
 | RN-02 | CEP plugin and CEP SDK installed | fail | clevertap, moengage, webengage | both packages from **Dependencies** in `package.json` | Install the pair. |
 | RN-03 | `initialize` is awaited before `register` | fail | all | `await Digia.initialize(` before `Digia.register(` or `enableManagedCampaigns(` | Move the call after the awaited `initialize`. |
-| RN-04 | Real API key | fail | all | `apiKey:` value is not `YOUR_API_KEY` | Put the key from the Digia dashboard. |
+| RN-04 | Real API key | fail | all | `apiKey:` value is not `digia_xxx` | Put the key from the Digia dashboard. |
 | RN-05 | One `<DigiaHost />`, last child of the root | fail | all | exactly one `<DigiaHost` in the source | Add it after the navigator. |
 | RN-06 | One plugin registered, or managed campaigns on | fail | all | one `Digia.register(`; for `digia`, `Digia.enableManagedCampaigns()` and no `register` | Add the call from **Initialize and register**. |
 | RN-07 | Screen tracking | fail | all | `Digia.setCurrentScreen(` | Add **Screen tracking**. |
