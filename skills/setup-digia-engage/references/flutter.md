@@ -1,23 +1,25 @@
 # Flutter
 
 Docs: `https://www.digia.tech/docs/developer/<cep>` (`clevertap`, `moengage`, `webengage`).
-Digia-managed campaigns are not available on Flutter yet: ask the user which CEP to use.
+With no CEP, use Digia-managed campaigns (`digia`): Digia decides on the device when a campaign
+shows. Campaigns that Digia decides also show in an app that registers a CEP plugin.
 
 ## Dependencies
 
 | CEP | Command |
 |---|---|
-| clevertap | `flutter pub add digia_engage:^2.1.0 digia_engage_clevertap:^2.0.0 clevertap_plugin:^3.8.1` |
-| moengage | `flutter pub add digia_engage:^2.1.0 digia_moengage_plugin:^2.0.0 moengage_flutter:^10.5.0` |
-| webengage | `flutter pub add digia_engage:^2.1.0 digia_webengage_plugin:^2.0.0 webengage_flutter:^1.7.0` |
+| digia | `flutter pub add digia_engage:^2.2.0` |
+| clevertap | `flutter pub add digia_engage:^2.2.0 digia_engage_clevertap:^2.0.0 clevertap_plugin:^3.8.1` |
+| moengage | `flutter pub add digia_engage:^2.2.0 digia_moengage_plugin:^2.0.0 moengage_flutter:^10.5.0` |
+| webengage | `flutter pub add digia_engage:^2.2.0 digia_webengage_plugin:^2.0.0 webengage_flutter:^1.7.0` |
 
 If pub cannot find `digia_engage_clevertap` 2.0.0, stop and tell the user. Do not use 1.x: it
 needs `digia_engage` 1.x.
 
 Do not change the version of a package that is already in the app's `pubspec.yaml`. `digia_engage`
-2.1.0 needs these major versions: `flutter_svg` 2, `share_plus` 11, `package_info_plus` 8,
-`carousel_slider` 5, `lottie` 3, `uuid` 4, and dio 5.9.1 or later (it does not compile with dio
-5.9.0). If `pub add` fails on one of them, it adds nothing. Then add the Digia lines to
+2.2.0 needs these major versions: `flutter_svg` 2, `share_plus` 11, `package_info_plus` 8,
+`carousel_slider` 5, `lottie` 3, `uuid` 4, `connectivity_plus` 6 or 7, `sqflite` 2, and dio 5.9.1
+or later. `connectivity_plus` adds the Android `ACCESS_NETWORK_STATE` permission. If `pub add` fails on one of them, it adds nothing. Then add the Digia lines to
 `dependencies` by hand, and add a `dependency_overrides` entry with the version Digia needs, with
 a comment:
 
@@ -78,6 +80,7 @@ Future<void> main() async {
 
 | CEP | Register call |
 |---|---|
+| digia | none |
 | clevertap | `Digia.register(DigiaCleverTapPlugin())` |
 | moengage | `Digia.register(MoEngagePlugin(instance: moEngage))` |
 | webengage | `Digia.register(DigiaWebEngagePlugin())` |
@@ -92,7 +95,7 @@ await Digia.initialize(DigiaConfig(apiKey: 'YOUR_API_KEY'));
 Digia.register(MoEngagePlugin(instance: moEngage));
 ```
 
-Register one plugin. A second `register` replaces the first.
+Register one plugin. A second `register` replaces the first. With `digia`, register no plugin.
 
 ## Host and screen tracking
 
@@ -154,6 +157,31 @@ on login, `moEngage.logout()` on logout.
 
 Put the API key where the app keeps its other keys, for example `--dart-define`. If the app has no
 such place, write it in `main`.
+
+## Digia-managed campaigns
+
+For `digia`, or when the user wants Digia-managed campaigns next to a CEP. A campaign triggers on
+app open, on a screen view (from **Host and screen tracking**), or on an event that the app sends:
+
+```dart
+// Digia Engage: lets Digia-managed campaigns trigger on this event.
+Digia.trackEvent('add_to_cart', properties: {'sku': sku, 'price': price});
+// Revenue: Digia.trackEvent('order_placed', value: 650, currency: 'INR');
+```
+
+Ask the user which actions campaigns should trigger on, for example add to cart, purchase or search.
+Add `trackEvent` at those places only. Use `String`, `num` or `bool` property values: rules compare these. The event and
+property names appear in the dashboard after the first event arrives.
+
+User attributes that campaign conditions compare, after `Digia.setUserId`:
+
+```dart
+// Digia Engage: campaign conditions can compare these attributes.
+await Digia.setUserAttributes({'city': user.city, 'plan': user.plan});
+```
+
+Values are `String`, `num`, `bool` or `List<String>`. Calls merge. `Digia.clearUserId()` clears them.
+Do not send personal data such as email or phone unless the user asks.
 
 ## CEP native steps
 
@@ -295,10 +323,12 @@ app has a `navigatorKey`, use `navigatorKey.currentContext!`.
 | ID | Rule | Severity | CEP | Detect | Fix |
 |---|---|---|---|---|---|
 | FL-01 | Core package added | fail | all | `digia_engage:` in `pubspec.yaml` | Run **Dependencies**. |
-| FL-02 | CEP plugin and CEP SDK added | fail | all | both packages from **Dependencies** in `pubspec.yaml` | Add the pair. |
-| FL-03 | `initialize` is awaited before `register` and `runApp` | fail | all | `await Digia.initialize(` in `main`, before `Digia.register(` and `runApp(` | Move the calls into that order. |
+| FL-02 | CEP plugin and CEP SDK added | fail | clevertap, moengage, webengage | both packages from **Dependencies** in `pubspec.yaml` | Add the pair. |
+| FL-03 | `initialize` is awaited before `register` and `runApp` | fail | all | `await Digia.initialize(` in `main`, before `Digia.register(` (if any) and `runApp(` | Move the calls into that order. |
 | FL-04 | Real API key | fail | all | `apiKey:` value is not `YOUR_API_KEY` | Put the key from the Digia dashboard. |
-| FL-05 | One plugin registered | fail | all | exactly one `Digia.register(` | Add the call from **Initialize and register**. |
+| FL-05 | One plugin registered | fail | clevertap, moengage, webengage | exactly one `Digia.register(` | Add the call from **Initialize and register**. |
+| FL-15 | No stray plugin | fail | digia | no `Digia.register(` | Remove the call, or ask the user which CEP to use. |
+| FL-16 | App events sent | warn | digia | at least one `Digia.trackEvent(` | Add **Digia-managed campaigns**. |
 | FL-06 | One `DigiaHost` in the app builder | fail | all | exactly one `DigiaHost(`, inside `builder:` | Add **Host and screen tracking**. |
 | FL-07 | Screen tracking | fail | all | `DigiaNavigatorObserver()` in `navigatorObservers` or GoRouter `observers`, or `Digia.setCurrentScreen(` | Add the observer. |
 | FL-08 | Identity | warn | all | `Digia.setUserId(` and `Digia.clearUserId(` | Add **Identity**. |

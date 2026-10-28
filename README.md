@@ -57,7 +57,7 @@ Or use the plugin system of your agent:
 
 | Your app | What the skill does |
 |---|---|
-| Has no Digia Engage | Detects your platform and CEP, asks for your Digia API key, adds the SDK, builds the app, then checks the result. |
+| Has no Digia Engage | Detects your platform and CEP, asks for your Digia API key, adds the SDK, checks the result, then offers to help build the app. |
 | Has Digia Engage | Checks the integration and reports each issue with its file, line and fix. It offers to fix them. |
 
 ## Supported setups
@@ -65,11 +65,11 @@ Or use the plugin system of your agent:
 | Platform | CleverTap | MoEngage | WebEngage | Digia-managed |
 |---|:-:|:-:|:-:|:-:|
 | React Native | ✅ | ✅ | ✅ | ✅ |
-| Flutter | ✅ ¹ | ✅ | ✅ | — |
+| Flutter | ✅ ¹ | ✅ | ✅ | ✅ |
 | Android | ✅ | ✅ (beta) | ✅ | — |
 | iOS | ✅ (beta) | ✅ (beta) | ✅ | — |
 
-¹ Needs `digia_engage_clevertap` 2.0.0.
+¹ Needs `digia_engage_clevertap` 2.0.0, which is not on pub.dev yet.
 
 ## After setup
 

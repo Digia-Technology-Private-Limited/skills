@@ -31,8 +31,9 @@ Detect the **CEP** from dependencies: CleverTap, MoEngage or WebEngage SDK packa
 
 - One CEP SDK found: use it.
 - Two found: ask the user which one Digia Engage uses.
-- None found on React Native: ask whether to use Digia-managed campaigns (`digia`) or to add a CEP.
-- None found on other stacks: ask which CEP to use.
+- None found on React Native or Flutter: ask whether to use Digia-managed campaigns (`digia`) or
+  to add a CEP.
+- None found on Android or iOS: ask which CEP to use.
 
 Read the stack reference now. Done when stack and CEP are both known.
 
@@ -71,7 +72,8 @@ Follow the stack reference, section by section, for this CEP:
 8. Run the static check: `flutter analyze` for Flutter, `npx tsc --noEmit` for React Native when
    the app has `tsconfig.json`. Native Android and iOS have no fast check without a build: read
    the diff again instead. If an error comes from your change or an override, do not change
-   unrelated app code to fix it. Tell the user each problem and its cause.
+   unrelated app code to fix it. Tell the user each problem and its cause, for example a
+   `flutter_svg` version mismatch that breaks `precachePicture`.
 
 Do not build the app. A build can need signing, native tools or secrets that only the user has.
 
@@ -113,7 +115,9 @@ Settings on the device. The screen opens in debug builds only:
 - iOS Simulator: `xcrun simctl openurl booted "digia-engage://_digia/debug-settings"`
 - iOS device: open `digia-engage://_digia/debug-settings` from Safari or Notes.
 
-A CEP campaign shows only when the app sends its trigger event to the CEP. The API key must be
+A CEP campaign shows only when the app sends its trigger event to the CEP. A Digia-managed
+campaign shows when its trigger happens in the app: app open, a screen view, or an event the app
+sends to Digia. The API key must be
 from the Digia project that has the campaign. The log line
 `Dropped — not found in the campaign store` usually means a wrong key.
 
