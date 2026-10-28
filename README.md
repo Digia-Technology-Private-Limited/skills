@@ -65,11 +65,9 @@ Or use the plugin system of your agent:
 | Platform | CleverTap | MoEngage | WebEngage | Digia-managed |
 |---|:-:|:-:|:-:|:-:|
 | React Native | ✅ | ✅ | ✅ | ✅ |
-| Flutter | ✅ ¹ | ✅ | ✅ | ✅ |
+| Flutter | ✅ | ✅ | ✅ | ✅ |
 | Android | ✅ | ✅ (beta) | ✅ | — |
 | iOS | ✅ (beta) | ✅ (beta) | ✅ | — |
-
-¹ Needs `digia_engage_clevertap` 2.0.0, which is not on pub.dev yet.
 
 ## After setup
 
