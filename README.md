@@ -68,7 +68,7 @@ Or use the plugin system of your agent:
 
 | Your app | What the skill does |
 |---|---|
-| Has no Digia Engage | Detects your platform and CEP. Asks whether to use your CEP or Digia's own campaigns, and asks for your Digia API key (you can add it later). Adds the SDK, checks the result, lists each dependency override and each problem it causes, then offers to help build the app. |
+| Has no Digia Engage | Detects your platform and CEP (CleverTap, MoEngage or WebEngage). Asks whether to use that CEP or Digia's own campaigns; with no CEP, uses Digia's own campaigns on React Native and Flutter. Asks for your Digia API key (you can add it later). Adds the SDK, checks the result, lists each dependency override and each problem it causes, then offers to help build the app. |
 | Has Digia Engage | Checks the integration and reports each issue with its file, line and fix. It offers to fix them. |
 
 ## Supported setups

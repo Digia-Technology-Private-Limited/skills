@@ -29,7 +29,8 @@ Detect the **stack** from the app root:
 | `build.gradle(.kts)` with `com.android.application`, no RN or Flutter | Android | [android.md](references/android.md) |
 | `.xcodeproj` or `Package.swift`, no RN or Flutter | iOS | [ios.md](references/ios.md) |
 
-Detect the **CEP** from dependencies: CleverTap, MoEngage or WebEngage SDK packages.
+Detect the **CEP** from dependencies: CleverTap, MoEngage or WebEngage SDK packages. Digia works
+with these three CEPs only. Any other CEP counts as none found.
 
 The app already calls `Digia.initialize`: take the CEP from the registered Digia plugin, or
 `digia` if there is none, and ask nothing.
@@ -39,7 +40,7 @@ Else ask the user, in one prompt. Use your question tool if you have one (for ex
 
 - React Native or Flutter: which setup to use. Offer **Digia with <the CEP you found>** (one
   option for each CEP found) and **Digia with its own campaigns (trigger + data)**, which is
-  `digia`. No CEP found: offer `digia` and adding a CEP.
+  `digia`. No CEP found: use `digia`, and do not ask about the setup.
 - Android or iOS: one CEP found, use it. Two found, ask which one. None found, ask which CEP to add.
 - The Digia API key, if they have one. They can skip it and add it later.
 
