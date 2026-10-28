@@ -31,8 +31,9 @@ Detect the **CEP** from dependencies: CleverTap, MoEngage or WebEngage SDK packa
 
 - One CEP SDK found: use it.
 - Two found: ask the user which one Digia Engage uses.
-- None found on React Native: ask whether to use Digia-managed campaigns (`digia`) or to add a CEP.
-- None found on other stacks: ask which CEP to use.
+- None found on React Native or Flutter: ask whether to use Digia-managed campaigns (`digia`) or
+  to add a CEP.
+- None found on Android or iOS: ask which CEP to use.
 
 Read the stack reference now. Done when stack and CEP are both known.
 
@@ -59,12 +60,27 @@ Follow the stack reference, section by section, for this CEP:
 2. Ask the user for the Digia API key. If they skip, write `YOUR_API_KEY` and continue. Check
    then reports the key rule as a fail. Leave that fail for the user.
 3. Add initialize, plugin registration, host, screen tracking and the CEP native steps.
-4. Match the app's existing code style, entry points and navigation library.
-5. Build the app with the command in the stack reference. Fix errors until the build passes.
+4. Add anchors to the bottom navigation, and propose slots, as **Anchors and slots** in the stack
+   reference says.
+5. Match the app's existing code style, entry points and navigation library.
+6. Add a short comment, one or two lines, at each change in the app's code. Say why the change is
+   there, for example `// Digia Engage: shows in-app campaigns on top of the app.` Skip files that
+   do not allow comments, such as JSON.
+7. Do not change the version of a package that the app already has. If Digia needs a different
+   version: Flutter, add a `dependency_overrides` entry as `flutter.md` says, and list each
+   override in the summary; other stacks, tell the user and change nothing without consent.
+8. Run the static check: `flutter analyze` for Flutter, `npx tsc --noEmit` for React Native when
+   the app has `tsconfig.json`. Native Android and iOS have no fast check without a build: read
+   the diff again instead. If an error comes from your change or an override, do not change
+   unrelated app code to fix it. Tell the user each problem and its cause, for example a
+   `flutter_svg` version mismatch that breaks `precachePicture`.
 
-Show a short diff summary: each file changed, and why. Then run step 6 on the result.
+Do not build the app. A build can need signing, native tools or secrets that only the user has.
 
-Done when the build passes and the diff summary is shown.
+Show a short diff summary: each file changed, and why. List the anchor and slot keys, each
+override, and each problem from the static check. Then run step 6 on the result.
+
+Done when the diff summary is shown.
 
 ## 6. Check
 
@@ -85,11 +101,24 @@ Digia Engage check — <stack> × <CEP>
 
 List fails first, then warns, then passes. Give the **Fix** for each fail and warn.
 
-If any rule fails, offer to fix them. On yes, apply the fixes, build, and check again.
+If any rule fails, offer to fix them. On yes, apply the fixes and check again.
+
+If the source has no anchor or slot, recommend **Anchors and slots** from the stack reference.
+
+Ask the user if they want help to build the app. On yes, use the command in **Build** in the stack
+reference. Fix the errors that your changes cause. Tell the user about the other errors.
 
 End with the next steps: run a live test from the Digia Engage Dashboard, and open SDK Debug
-Settings on the device (`digia-engage://_digia/debug-settings`). A CEP campaign shows only when
-the app sends its trigger event to the CEP. The API key must be from the Digia project that has
-the campaign. The log line `Dropped — not found in the campaign store` usually means a wrong key.
+Settings on the device. The screen opens in debug builds only:
+
+- Android: `adb shell am start -a android.intent.action.VIEW -d "digia-engage://_digia/debug-settings" <package>`
+- iOS Simulator: `xcrun simctl openurl booted "digia-engage://_digia/debug-settings"`
+- iOS device: open `digia-engage://_digia/debug-settings` from Safari or Notes.
+
+A CEP campaign shows only when the app sends its trigger event to the CEP. A Digia-managed
+campaign shows when its trigger happens in the app: app open, a screen view, or an event the app
+sends to Digia. The API key must be
+from the Digia project that has the campaign. The log line
+`Dropped — not found in the campaign store` usually means a wrong key.
 
 Done when every applicable rule has a result and the report is shown.
