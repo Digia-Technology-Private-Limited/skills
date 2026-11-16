@@ -34,21 +34,12 @@ connects your CEP or Digia's own campaigns, and checks the result. It does not b
 Any agent (Claude Code, Codex, Cursor, OpenCode, GitHub Copilot, Gemini CLI, Windsurf and others):
 
 ```sh
-npx skills add Digia-Technology-Private-Limited/skills -s setup-digia-engage
+npx skills add Digia-Technology-Private-Limited/skills -s setup-digia-engage -g -y
 ```
 
-Run it in a terminal. The command asks which agents to install for. Add `-g` to install for
-your user, not for the project.
-
-Cursor, with no files added to your app's repository:
-
-```sh
-npx skills add Digia-Technology-Private-Limited/skills -s setup-digia-engage -a cursor -g -y
-```
-
-If you paste the command into the agent chat instead, the agent can install the skill into the
-project, in `.agents/skills/`. That works too. The skill ignores that folder when it checks for
-uncommitted changes. Commit the folder or add it to `.gitignore`.
+Run it in a terminal, or ask your coding agent to run it. It installs the skill once for your
+user, for each coding agent it finds on your machine, and adds no files to your app's
+repository. Then start a new agent chat in your app's repository, so the agent loads the skill.
 
 Or use the plugin system of your agent:
 
