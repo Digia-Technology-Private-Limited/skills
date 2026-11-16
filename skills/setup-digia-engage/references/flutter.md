@@ -1,23 +1,24 @@
 # Flutter
 
 Docs: `https://www.digia.tech/docs/developer/<cep>` (`clevertap`, `moengage`, `webengage`).
-With no CEP, use Digia-managed campaigns (`digia`): Digia decides on the device when a campaign
-shows. Campaigns that Digia decides also show in an app that registers a CEP plugin.
+Digia-managed campaigns (`digia`) have no Flutter docs page yet: follow this file, and do not
+link the user to `digia-cep`, which covers React Native only. With `digia`, Digia decides on the
+device when a campaign shows.
 
 ## Dependencies
 
 | CEP | Command |
 |---|---|
-| digia | `flutter pub add digia_engage:^2.2.0` |
-| clevertap | `flutter pub add digia_engage:^2.2.0 digia_engage_clevertap:^2.0.0 clevertap_plugin:^3.8.1` |
-| moengage | `flutter pub add digia_engage:^2.2.0 digia_moengage_plugin:^2.0.0 moengage_flutter:^10.5.0` |
-| webengage | `flutter pub add digia_engage:^2.2.0 digia_webengage_plugin:^2.0.0 webengage_flutter:^1.7.0` |
+| digia | `flutter pub add digia_engage:^2.3.0` |
+| clevertap | `flutter pub add digia_engage:^2.3.0 digia_engage_clevertap:^2.0.0 clevertap_plugin:^3.8.1` |
+| moengage | `flutter pub add digia_engage:^2.3.0 digia_moengage_plugin:^2.0.0 moengage_flutter:^10.5.0` |
+| webengage | `flutter pub add digia_engage:^2.3.0 digia_webengage_plugin:^2.0.0 webengage_flutter:^1.7.0` |
 
 If pub cannot find `digia_engage_clevertap` 2.0.0, stop and tell the user. Do not use 1.x: it
 needs `digia_engage` 1.x.
 
 Do not change the version of a package that is already in the app's `pubspec.yaml`. `digia_engage`
-2.2.0 needs these major versions: `flutter_svg` 2, `share_plus` 11, `package_info_plus` 8,
+2.3.0 needs these major versions: `flutter_svg` 2, `share_plus` 11, `package_info_plus` 8,
 `carousel_slider` 5, `lottie` 3, `uuid` 4, `connectivity_plus` 6 or 7, `sqflite` 2, and dio 5.9.1
 or later. `connectivity_plus` adds the Android `ACCESS_NETWORK_STATE` permission. If `pub add` fails on one of them, it adds nothing. Then add the Digia lines to
 `dependencies` by hand, and add a `dependency_overrides` entry with the version Digia needs, with
@@ -125,20 +126,39 @@ An anchor marks the widget that a tooltip or spotlight points at. A slot shows i
 (banner, card, story) and takes no space when no campaign is live.
 
 Anchors: by default, wrap the icon of each bottom navigation item. Make the key from the item
-label, in snake_case:
+label, in snake_case. The selected tab shows `activeIcon` in place of `icon`, so if the item has
+an `activeIcon`, wrap it too, with the same key. Otherwise the selected tab has no anchor:
 
 ```dart
 BottomNavigationBarItem(
-  icon: DigiaAnchor(anchorKey: 'nav_home', child: const Icon(Icons.home)),
+  icon: DigiaAnchor(anchorKey: 'nav_home', child: const Icon(Icons.home_outlined)),
+  activeIcon: DigiaAnchor(anchorKey: 'nav_home', child: const Icon(Icons.home)),
   label: 'Home',
 )
 ```
 
-Material 3: `NavigationDestination(icon: DigiaAnchor(anchorKey: 'nav_home', child: const Icon(Icons.home)), label: 'Home')`.
+Material 3: `NavigationDestination` has `icon` and `selectedIcon`. Wrap both the same way.
 
-Slots: find the screens with static content, for example a home, offers or profile screen. Propose
-one place on each, for example `DigiaSlot('home_banner')` below the header. Add a slot only when
-the user agrees.
+Slots: add them yourself, one per screen, on the home screen and on each screen with static
+content, for example offers, profile, about, terms, FAQ or order success. Name the key after the
+screen, in snake_case: `home_top`, `about_top`. Put the slot at the top of the screen's content,
+below the app bar or header. If the content is one widget, such as a `Text` in a scroll view,
+put it and the slot in a `Column`:
+
+```dart
+SingleChildScrollView(
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      // Digia Engage: shows inline campaigns here. Takes no space when none is live.
+      const DigiaSlot('about_top'),
+      Text(aboutText),
+    ],
+  ),
+)
+```
+
+Ask the user before you add a slot inside a list, a grid or a form.
 
 Give the user the list of keys. The marketer selects the same keys in the Digia dashboard.
 
@@ -160,28 +180,62 @@ such place, write it in `main`.
 
 ## Digia-managed campaigns
 
-For `digia`, or when the user wants Digia-managed campaigns next to a CEP. A campaign triggers on
-app open, on a screen view (from **Host and screen tracking**), or on an event that the app sends:
+Only for `digia`. With a CEP, do not add `trackEvent` or `setUserAttributes`: the CEP receives
+the app's events and user data.
+
+A campaign triggers on app open, app foreground, a screen view (from **Host and screen
+tracking**), an anchor or slot becoming visible, or an event that the app sends. Add the events
+and user attributes yourself. Do not ask the user which ones.
+
+### Events
+
+Send Digia the events the app already tracks, with the same names and properties, so the
+marketer sees the same event names in their analytics tool and in the Digia dashboard:
+
+1. The app has an analytics wrapper that every event goes through, for example an
+   `AnalyticsService.logEvent` around `FirebaseAnalytics.instance.logEvent`: add one
+   `Digia.trackEvent` line inside it.
+2. No wrapper: add `Digia.trackEvent` next to each direct analytics call, such as
+   `FirebaseAnalytics.instance.logEvent`, Mixpanel `track` or Amplitude `logEvent`.
+3. No analytics: add it at the app's key actions, such as sign up, login, search, add to cart,
+   checkout and purchase. Use snake_case names, and pass the values already in scope.
 
 ```dart
-// Digia Engage: lets Digia-managed campaigns trigger on this event.
-Digia.trackEvent('add_to_cart', properties: {'sku': sku, 'price': price});
-// Revenue: Digia.trackEvent('order_placed', value: 650, currency: 'INR');
+Future<void> logEvent(String name, {Map<String, Object>? parameters}) async {
+  await FirebaseAnalytics.instance.logEvent(name: name, parameters: parameters);
+  // Digia Engage: lets Digia-managed campaigns trigger on this event.
+  Digia.trackEvent(name, properties: parameters ?? const {});
+}
 ```
 
-Ask the user which actions campaigns should trigger on, for example add to cart, purchase or search.
-Add `trackEvent` at those places only. Use `String`, `num` or `bool` property values: rules compare these. The event and
-property names appear in the dashboard after the first event arrives.
+`trackEvent` takes the event name and `properties` only. 2.3.0 removed `value` and `currency`:
+put an amount in `properties`, for example `{'value': 650, 'currency': 'INR'}`. Use `String`,
+`num` or `bool` property values: rules compare these. The event and property names appear in the
+dashboard after the first event arrives.
 
-User attributes that campaign conditions compare, after `Digia.setUserId`:
+### User attributes
+
+Campaign conditions compare these:
+
+1. The app sets user properties in its analytics tool, for example
+   `FirebaseAnalytics.instance.setUserProperty(name: ..., value: ...)`: send the same name and
+   value with `Digia.setUserAttributes`, next to each call or inside the wrapper.
+2. Otherwise, right after `Digia.setUserId`, send the profile fields the app already has on the
+   user, such as name, email, phone, city, plan and sign-up date.
 
 ```dart
+await Digia.setUserId(user.id);
 // Digia Engage: campaign conditions can compare these attributes.
-await Digia.setUserAttributes({'city': user.city, 'plan': user.plan});
+await Digia.setUserAttributes({
+  'name': user.name,
+  'email': user.email,
+  'city': user.city,
+  'signup_date': user.createdAt.toIso8601String(),
+});
 ```
 
-Values are `String`, `num`, `bool` or `List<String>`. Calls merge. `Digia.clearUserId()` clears them.
-Do not send personal data such as email or phone unless the user asks.
+Values are `String`, `num`, `bool` or `List<String>`. Send dates as ISO 8601 strings. Leave out
+fields that are null. Calls merge. `Digia.clearUserId()` clears them.
 
 ## CEP native steps
 
@@ -328,7 +382,9 @@ app has a `navigatorKey`, use `navigatorKey.currentContext!`.
 | FL-04 | Real API key | fail | all | `apiKey:` value is not `digia_xxx` | Put the key from the Digia dashboard. |
 | FL-05 | One plugin registered | fail | clevertap, moengage, webengage | exactly one `Digia.register(` | Add the call from **Initialize and register**. |
 | FL-15 | No stray plugin | fail | digia | no `Digia.register(` | Remove the call, or ask the user which CEP to use. |
-| FL-16 | App events sent | warn | digia | at least one `Digia.trackEvent(` | Add **Digia-managed campaigns**. |
+| FL-16 | App events sent | fail | digia | `Digia.trackEvent(` in the analytics wrapper or next to each analytics event call; with no analytics, at least one | Add **Events**. |
+| FL-17 | User attributes sent | warn | digia | `Digia.setUserAttributes(` | Add **User attributes**. |
+| FL-18 | Selected tab anchored | warn | all | each bottom navigation item with a `DigiaAnchor` on `icon` and an `activeIcon` or `selectedIcon` has the same `anchorKey` on both | Wrap the active icon as **Anchors and slots** says. |
 | FL-06 | One `DigiaHost` in the app builder | fail | all | exactly one `DigiaHost(`, inside `builder:` | Add **Host and screen tracking**. |
 | FL-07 | Screen tracking | fail | all | `DigiaNavigatorObserver()` in `navigatorObservers` or GoRouter `observers`, or `Digia.setCurrentScreen(` | Add the observer. |
 | FL-08 | Identity | warn | all | `Digia.setUserId(` and `Digia.clearUserId(` | Add **Identity**. |
