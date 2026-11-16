@@ -1,8 +1,7 @@
 # Flutter
 
 Docs: `https://www.digia.tech/docs/developer/<cep>` (`clevertap`, `moengage`, `webengage`).
-Digia-managed campaigns (`digia`) have no Flutter docs page yet: follow this file, and do not
-link the user to `digia-cep`, which covers React Native only. With `digia`, Digia decides on the
+Digia-managed campaigns (`digia`) have no Flutter docs page yet: follow this file. With `digia`, Digia decides on the
 device when a campaign shows.
 
 ## Dependencies

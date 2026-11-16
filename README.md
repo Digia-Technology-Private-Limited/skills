@@ -23,8 +23,7 @@
 
 Digia Engage lets your growth team ship nudges, bottom sheets, coachmarks, quizzes, scratch
 cards and NPS surveys to your app with no code and no app release. It runs on the CEP you
-already use (CleverTap, MoEngage or WebEngage), or with its own campaigns on React Native and
-Flutter.
+already use (CleverTap, MoEngage or WebEngage), or with its own campaigns.
 
 The `setup-digia-engage` skill does the integration for you. Your coding agent adds the SDK,
 connects your CEP or Digia's own campaigns, and checks the result. It does not build the app.
@@ -59,7 +58,7 @@ Or use the plugin system of your agent:
 
 | Your app | What the skill does |
 |---|---|
-| Has no Digia Engage | Detects your platform and CEP (CleverTap, MoEngage or WebEngage). Asks whether to use that CEP or Digia's own campaigns; with no CEP, uses Digia's own campaigns on React Native and Flutter. Asks for your Digia API key (you can add it later). Adds the SDK, checks the result, lists each dependency override and each problem it causes, then offers to help build the app. |
+| Has no Digia Engage | Detects your platform and CEP (CleverTap, MoEngage or WebEngage). Asks whether to use that CEP or Digia's own campaigns, or, with no CEP, Digia's own campaigns or one of the three CEPs. Asks for your Digia API key (you can add it later). Adds the SDK, checks the result, lists each dependency override and each problem it causes, then offers to help build the app. |
 | Has Digia Engage | Checks the integration and reports each issue with its file, line and fix. It offers to fix them. |
 
 ## Supported setups

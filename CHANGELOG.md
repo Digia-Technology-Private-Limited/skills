@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.5.0
+
+Android, iOS and React Native get the Flutter Digia-managed campaigns flow. Flutter is unchanged.
+
+- Always ask: Digia-managed campaigns, or Digia with the CEP found (CleverTap, MoEngage or
+  WebEngage when none is found), on every stack, even when the app already calls
+  `Digia.initialize`.
+- Digia-managed campaigns on Android (`tech.digia:engage`), iOS (`DigiaEngage` core) and React
+  Native (`@digia-engage/core`): `initialize` only, no plugin. Add `Digia.trackEvent` in the
+  analytics wrapper, next to each analytics event call, or at key actions, and
+  `Digia.setUserAttributes` from the analytics user properties or the user model.
+- React Native: `enableManagedCampaigns` is gone from the skill. No `digia-cep` docs link.
+- iOS and React Native: Digia pods come from the Digia spec repo. Add the `digia-podspecs` and
+  CDN `source` lines to the Podfile (Expo: `"plugins": ["@digia-engage/core"]`), run
+  `pod install --repo-update`, and commit `Podfile.lock`.
+- Anchors: the selected tab icon shares the key of its normal icon (Compose, `tabBarIcon`, custom
+  SwiftUI tab buttons). System tab bars that cannot be wrapped: propose anchors on main buttons.
+- Slots: add one at the top of the home screen and each static content screen without asking.
+  Ask before adding one in a list, grid or form.
+- Check: new AN-12..15, IO-12..16 and RN-18..21. AN-04 and IO-04 no longer apply to `digia`.
+  RN-03 and RN-06 drop managed campaigns.
+
 ## 1.4.0
 
 Flutter only. React Native, Android and iOS are unchanged.

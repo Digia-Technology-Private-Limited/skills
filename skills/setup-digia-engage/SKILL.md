@@ -32,21 +32,14 @@ Detect the **stack** from the app root:
 Detect the **CEP** from dependencies: CleverTap, MoEngage or WebEngage SDK packages. Digia works
 with these three CEPs only. Any other CEP counts as none found.
 
-React Native, Android or iOS app that already calls `Digia.initialize`: take the CEP from the
-registered Digia plugin, or `digia` if there is none, and ask nothing.
-
-Else ask the user, in one prompt. Use your question tool if you have one (for example
+Ask the user, in one prompt. Use your question tool if you have one (for example
 `AskUserQuestion`), else ask in chat and wait:
 
-- Flutter: always ask which setup to use, even when the app has a CEP or already calls
+- Which setup to use. Always ask, even when the app has a CEP or already calls
   `Digia.initialize`. Offer **Digia-managed campaigns**, which is `digia`, and **Digia with <the
   CEP you found>** (one option for each CEP found). No CEP found: offer **Digia-managed
   campaigns** and **Digia with CleverTap**, **MoEngage** or **WebEngage**. The app already calls
   `Digia.initialize`: mark the setup it uses now as current.
-- React Native: which setup to use. Offer **Digia with <the CEP you found>** (one option for
-  each CEP found) and **Digia with its own campaigns (trigger + data)**, which is `digia`. No CEP
-  found: use `digia`, and do not ask about the setup.
-- Android or iOS: one CEP found, use it. Two found, ask which one. None found, ask which CEP to add.
 - The Digia API key, if they have one. They can skip it and add it later.
 
 Read the stack reference now. Done when stack and CEP are both known.
