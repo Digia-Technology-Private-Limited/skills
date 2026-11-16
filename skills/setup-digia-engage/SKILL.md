@@ -32,15 +32,20 @@ Detect the **stack** from the app root:
 Detect the **CEP** from dependencies: CleverTap, MoEngage or WebEngage SDK packages. Digia works
 with these three CEPs only. Any other CEP counts as none found.
 
-The app already calls `Digia.initialize`: take the CEP from the registered Digia plugin, or
-`digia` if there is none, and ask nothing.
+React Native, Android or iOS app that already calls `Digia.initialize`: take the CEP from the
+registered Digia plugin, or `digia` if there is none, and ask nothing.
 
 Else ask the user, in one prompt. Use your question tool if you have one (for example
 `AskUserQuestion`), else ask in chat and wait:
 
-- React Native or Flutter: which setup to use. Offer **Digia with <the CEP you found>** (one
-  option for each CEP found) and **Digia with its own campaigns (trigger + data)**, which is
-  `digia`. No CEP found: use `digia`, and do not ask about the setup.
+- Flutter: always ask which setup to use, even when the app has a CEP or already calls
+  `Digia.initialize`. Offer **Digia-managed campaigns**, which is `digia`, and **Digia with <the
+  CEP you found>** (one option for each CEP found). No CEP found: offer **Digia-managed
+  campaigns** and **Digia with CleverTap**, **MoEngage** or **WebEngage**. The app already calls
+  `Digia.initialize`: mark the setup it uses now as current.
+- React Native: which setup to use. Offer **Digia with <the CEP you found>** (one option for
+  each CEP found) and **Digia with its own campaigns (trigger + data)**, which is `digia`. No CEP
+  found: use `digia`, and do not ask about the setup.
 - Android or iOS: one CEP found, use it. Two found, ask which one. None found, ask which CEP to add.
 - The Digia API key, if they have one. They can skip it and add it later.
 
@@ -69,16 +74,18 @@ Follow the stack reference, section by section, for this CEP:
 2. Write the API key from step 2. If the user skipped it, write `digia_xxx` and continue. Check
    then reports the key rule as a fail. Leave that fail for the user.
 3. Add initialize, plugin registration, host, screen tracking and the CEP native steps.
-4. Add anchors to the bottom navigation, and propose slots, as **Anchors and slots** in the stack
+4. Add anchors to the bottom navigation, and slots, as **Anchors and slots** in the stack
    reference says.
-5. Match the app's existing code style, entry points and navigation library.
-6. Add a short comment, one or two lines, at each change in the app's code. Say why the change is
+5. For `digia`, add events and user attributes as **Digia-managed campaigns** in the stack
+   reference says.
+6. Match the app's existing code style, entry points and navigation library.
+7. Add a short comment, one or two lines, at each change in the app's code. Say why the change is
    there, for example `// Digia Engage: shows in-app campaigns on top of the app.` Skip files that
    do not allow comments, such as JSON.
-7. Do not change the version of a package that the app already has. If Digia needs a different
+8. Do not change the version of a package that the app already has. If Digia needs a different
    version: Flutter, add a `dependency_overrides` entry as `flutter.md` says, and list each
    override in the summary; other stacks, tell the user and change nothing without consent.
-8. Run the static check: `flutter analyze` for Flutter, `npx tsc --noEmit` for React Native when
+9. Run the static check: `flutter analyze` for Flutter, `npx tsc --noEmit` for React Native when
    the app has `tsconfig.json`. Native Android and iOS have no fast check without a build: read
    the diff again instead. If an error comes from your change or an override, do not change
    unrelated app code to fix it. Tell the user each problem and its cause, for example a
@@ -90,8 +97,10 @@ Show a short summary with these parts. Leave out a part that has nothing in it:
 
 - **Files changed**: each file, and why.
 - **Anchors and slots**: each key and where it is.
+- **Events and attributes**: each `trackEvent` and `setUserAttributes` call you added, its file,
+  and the analytics call it mirrors.
 - **Dependency overrides**: one line each, `<package>: app has <version>, Digia needs
-  <version>, overridden to <version>`, and why Digia needs it, for example "digia_engage 2.2.0
+  <version>, overridden to <version>`, and why Digia needs it, for example "digia_engage 2.3.0
   needs connectivity_plus 6 or 7". Say that the override can break code that uses the old version.
 - **Static check**: each error or warning that your change or an override causes, with its file,
   the cause and a fix, for example "`lib/splash.dart:12` — `precachePicture` was removed in

@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.4.0
+
+Flutter only. React Native, Android and iOS are unchanged.
+
+- Always ask: Digia-managed campaigns, or Digia with the CEP found (CleverTap, MoEngage or
+  WebEngage when none is found), even when the app already calls `Digia.initialize`.
+- Digia-managed campaigns: add `Digia.trackEvent` in the analytics wrapper or next to each
+  analytics event call, with the same names and properties, or at key actions when the app has no
+  analytics. Add `Digia.setUserAttributes` from the analytics user properties or the user model.
+  Not added with a CEP.
+- `digia_engage` ^2.3.0. The `trackEvent` example no longer uses `value` and `currency`, which
+  2.3.0 removed.
+- Anchors: wrap `activeIcon` or `selectedIcon` with the same key as `icon`.
+- Slots: add one at the top of the home screen and each static content screen without asking.
+  Ask before adding one in a list, grid or form.
+- No docs link for Digia-managed campaigns until the Flutter page exists.
+- Check: FL-16 (events sent) is now a fail. New FL-17 (user attributes sent) and FL-18 (selected
+  tab anchored).
+
 ## 1.3.1
 
 - React Native and Flutter with no CleverTap, MoEngage or WebEngage: use Digia's own campaigns
