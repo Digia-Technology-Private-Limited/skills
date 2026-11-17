@@ -1,5 +1,70 @@
 # Changelog
 
+## 1.5.0
+
+Every stack follows the Digia Engage docs at `digia.tech/docs/developer`. Where the docs and the
+SDK code disagree, the skill follows the code.
+
+- Three setups, asked every time, even when the app already calls `Digia.initialize`:
+  Digia-managed campaigns (`digia`), Digia with the CEP found, and Digia with the CEP and
+  Digia-managed campaigns (`dmc`). Each reference links the docs page for the setup: `digia-cep`
+  for `digia`, the CEP page for a CEP, and the CEP page plus `digia-cep` events and attributes for
+  `dmc`.
+- Digia-managed campaigns on Android (`tech.digia:engage`), iOS (`DigiaEngage`) and React Native
+  (`@digia-engage/core`): `initialize` only, no plugin. Add `Digia.trackEvent` in the analytics
+  wrapper, next to each analytics event call, or at key actions, and `Digia.setUserAttributes` from
+  the analytics user properties or the user model. `dmc` adds them too.
+- Call order: start the CEP, register the plugin, then initialize. `register` works on either side
+  of `initialize` on every stack; register early, right after the CEP start, so the plugin sees the
+  first CEP trigger. Flutter starts `Digia.initialize`, registers the plugin on the next line, then
+  awaits it. Waiting is optional on every stack. CEP triggers that arrive before Digia is ready are
+  held, not dropped.
+- Minimum versions: React Native core 3.4.0 (React Native 0.83+, React 19.2+), Android 3.4.1, iOS
+  `DigiaEngage` 4.4.0, Flutter `digia_engage` 2.3.0.
+- CleverTap: Android, iOS and React Native call
+  `DigiaCleverTapPlugin.prepareCleverTapCustomTemplates()` natively, before CleverTap starts. React
+  Native makes the call in `MainApplication` and `AppDelegate`, because JavaScript runs too late.
+  Flutter registers `DigiaTemplate` itself. Sync the template once per CleverTap project from a test
+  profile on a debug build. The minimums are Android minSdk 24 and iOS 15.0 for every CEP. Flutter
+  iOS adds `CleverTapPlugin.sharedInstance()?.applicationDidLaunch`.
+- iOS: add the `DigiaEngage` core and the CEP plugin package (`digia_engage_clevertap_iOS`,
+  `digia_moengage_iOS`, `de_ios_webengage`). Digia pods come from the Digia spec repo.
+- WebEngage on every stack. Native Android adds `tech.digia:engage-webengage` and
+  `Digia.register(WebEngagePlugin())`; it brings WebEngage `android-sdk` 5.1.x and rejects 5.2.0+.
+  Native iOS adds `DigiaEngageWebEngage`, passes `DigiaWebEngagePlugin.notificationDelegate` to the
+  WebEngage start, and registers right after it. Flutter iOS keeps `DigiaDelegateProxy` as the
+  WebEngage notification delegate, as the plugin's code requires.
+- React Native plugins are thin native shells and take no arguments: `new DigiaCleverTapPlugin()`,
+  `new DigiaMoEngagePlugin()`. `createCleverTapClient` is gone. `clevertap-react-native`,
+  `react-native-moengage` and `react-native-webengage` are optional; `react-native-moengage`, when
+  present, must be 12.6.x to 12.9.x. `@react-native-async-storage/async-storage` is no longer
+  installed. WebEngage iOS drops `WEDigiaSuppressProxy` and, on React Native 0.75+ with
+  `react-native-webengage`, adds `ENV['WEBENGAGE_DISABLE_SPM'] = 'true'` to the Podfile. The core
+  handles the debug deeplink in JavaScript itself.
+- React Native: version pins, the Xcode `post_install` block, SDWebImage and the MoEngage BOM are
+  gone. Dependency conflicts follow the docs' dependency-conflicts page, with the user's consent.
+  `enableManagedCampaigns` is gone.
+- New: optional `userHash` on `setUserId` (React Native: `setUserId(id, { userHash })`), a **More
+  options** section with `setCampaignsSuppressed`, and React Native `environment`, `logLevel` and
+  `actionHandlers`. The next steps cover the Dashboard setting, the CleverTap `DigiaTemplate` sync
+  and the app version condition.
+- Identity: `setUserId` after every login and on app start with a logged-in user.
+  `clearAllInlineContent` is no longer called on logout.
+- Anchors: the selected tab icon shares the key of its normal icon (Compose, `tabBarIcon`, custom
+  SwiftUI tab buttons). System tab bars that cannot be wrapped: propose anchors on main buttons.
+- Slots: add one at the top of the home screen and each static content screen without asking.
+  Ask before adding one in a list, grid or form.
+- Check: new AN-12..15, IO-12..16 and RN-18..21. Events and attributes rules apply to `digia` and
+  `dmc`. AN-04, IO-04, RN-03 and FL-03 accept `register` on either side of `initialize`. RN-03
+  finds a call to `Digia.register(` with a plugin instance in any form. New AN-16 (WebEngage SDK
+  range), IO-17 (WebEngage delegate) and IO-18 (WebEngage plugin registered early). AN-01, IO-01,
+  RN-01 and FL-01 check the minimum versions. AN-08, IO-09 and RN-10 check the prepare call. RN-02 checks the
+  plugin package and the `react-native-moengage` range. RN-11 checks the native MoEngage start.
+  RN-12 checks the WebEngage Podfile flag. AN-10 accepts the `suspend` form. IO-08 states the build
+  minimums. FL-11 checks `DigiaDelegateProxy`. RN-14, RN-16 and RN-17 are removed.
+- New `references/shared.md` holds the version floors, call order, what is held before Digia is
+  ready and the debug log lines. The stack references link to it instead of repeating them.
+
 ## 1.4.0
 
 Flutter only. React Native, Android and iOS are unchanged.

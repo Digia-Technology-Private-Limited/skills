@@ -1,9 +1,8 @@
 # Flutter
 
-Docs: `https://www.digia.tech/docs/developer/<cep>` (`clevertap`, `moengage`, `webengage`).
-Digia-managed campaigns (`digia`) have no Flutter docs page yet: follow this file, and do not
-link the user to `digia-cep`, which covers React Native only. With `digia`, Digia decides on the
-device when a campaign shows.
+Docs: `https://www.digia.tech/docs/developer/<setup>`: `digia-cep` for `digia`, `clevertap`,
+`moengage` or `webengage`. For `dmc`, follow the CEP's page, plus the events and user attributes
+from `digia-cep`.
 
 ## Dependencies
 
@@ -13,6 +12,8 @@ device when a campaign shows.
 | clevertap | `flutter pub add digia_engage:^2.3.0 digia_engage_clevertap:^2.0.0 clevertap_plugin:^3.8.1` |
 | moengage | `flutter pub add digia_engage:^2.3.0 digia_moengage_plugin:^2.0.0 moengage_flutter:^10.5.0` |
 | webengage | `flutter pub add digia_engage:^2.3.0 digia_webengage_plugin:^2.0.0 webengage_flutter:^1.7.0` |
+
+`dmc` uses its CEP's packages.
 
 If pub cannot find `digia_engage_clevertap` 2.0.0, stop and tell the user. Do not use 1.x: it
 needs `digia_engage` 1.x.
@@ -33,9 +34,9 @@ dependency_overrides:
 App code that uses the old API can then fail, for example `precachePicture` in `flutter_svg` 1.
 Do not change that code. Tell the user each override and each error it causes.
 
-The SDK needs Dart 3.6 and Flutter 3.29 or later.
+`digia_engage`, Dart and Flutter must meet the floors in [shared.md](shared.md#version-floors).
 
-iOS: set the deployment target to 15.0 or later. Xcode 27 rejects the `flutter create`
+iOS: set the deployment target to 15.0 or later, as [shared.md](shared.md#version-floors) says. Xcode 27 rejects the `flutter create`
 default of 13.0. In `ios/Podfile`, set `platform :ios, '15.0'`, and set
 `IPHONEOS_DEPLOYMENT_TARGET = 15.0` in `ios/Runner.xcodeproj/project.pbxproj`. If pods still
 report 13.0, add this inside the Podfile's `post_install` loop, after
@@ -50,7 +51,7 @@ end
 `flutter build ios` shows the deployment target error only as a warning. It then prints
 "Encountered error while building for simulator".
 
-Campaigns show from iOS 17.0.
+Campaigns show from iOS 17: see [shared.md](shared.md#version-floors).
 
 If the app already has the CEP SDK, leave it out of the command, so its version stays. The Digia
 plugins do not support the next major CEP SDK version (`clevertap_plugin` 4, `moengage_flutter` 11,
@@ -68,16 +69,26 @@ Imports:
 
 ## Initialize and register
 
-In `main`, before `runApp`:
+In `main`, before `runApp`. Start the CEP first. Then start Digia and register the plugin on the
+next line. `register` works on either side of `initialize` (see
+[shared.md](shared.md#call-order)), but before it the SDK logs a misleading
+`register() ignored` error:
 
 ```dart
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Digia.initialize(DigiaConfig(apiKey: 'digia_xxx'));
+  final digiaReady = Digia.initialize(DigiaConfig(apiKey: 'digia_xxx'));
   Digia.register(DigiaCleverTapPlugin());
+  await digiaReady;
   runApp(const MyApp());
 }
 ```
+
+With `digia`, call only `await Digia.initialize(DigiaConfig(apiKey: 'digia_xxx'));`.
+
+Awaiting `initialize` delays startup until it returns: see
+[shared.md](shared.md#held-before-ready) for when, and what is held until then. To not wait, use
+`unawaited(digiaReady);` with `import 'dart:async';`.
 
 | CEP | Register call |
 |---|---|
@@ -92,11 +103,13 @@ instance to the plugin. You also start MoEngage natively (**CEP native steps**).
 ```dart
 final moEngage = MoEngageFlutter('YOUR_MOENGAGE_APP_ID');
 moEngage.initialise();
-await Digia.initialize(DigiaConfig(apiKey: 'digia_xxx'));
+final digiaReady = Digia.initialize(DigiaConfig(apiKey: 'digia_xxx'));
 Digia.register(MoEngagePlugin(instance: moEngage));
+await digiaReady;
 ```
 
-Register one plugin. A second `register` replaces the first. With `digia`, register no plugin.
+Register one plugin. A second `register` replaces the first. With `dmc`, register its CEP's
+plugin. With `digia`, register no plugin.
 
 ## Host and screen tracking
 
@@ -169,18 +182,36 @@ Next to the app's existing login and logout code:
 ```dart
 await Digia.setUserId(user.id);   // login
 await Digia.clearUserId();        // logout
-Digia.clearAllInlineContent();    // logout
 ```
 
-Keep the CEP's own login call. It does not reach Digia. MoEngage: `moEngage.identifyUser(user.id)`
+Call `setUserId` after every login and on app start when a user is already logged in. Keep the
+CEP's own login call. It does not reach Digia. MoEngage: `moEngage.identifyUser(user.id)`
 on login, `moEngage.logout()` on logout.
 
 Put the API key where the app keeps its other keys, for example `--dart-define`. If the app has no
 such place, write it in `main`.
 
+### User hash
+
+Optional. Add it when the team connects data or turns on **Settings → User verification** in the
+Digia Engage Dashboard. The app's backend computes the hash. Pass it with the user ID:
+
+```dart
+await Digia.setUserId(user.id, userHash: userHash);
+```
+
+## More options
+
+If the app shows its own popups, onboarding or a payment flow, hold Digia campaigns while it does:
+
+```dart
+Digia.setCampaignsSuppressed(true);   // before the app's own flow
+Digia.setCampaignsSuppressed(false);  // after it
+```
+
 ## Digia-managed campaigns
 
-Only for `digia`. With a CEP, do not add `trackEvent` or `setUserAttributes`: the CEP receives
+Only for `digia` and `dmc`. With only a CEP, do not add `trackEvent` or `setUserAttributes`: the CEP receives
 the app's events and user data.
 
 A campaign triggers on app open, app foreground, a screen view (from **Host and screen
@@ -258,10 +289,11 @@ class MainApplication : FlutterApplication() {
 ```
 
 iOS `AppDelegate`, in `didFinishLaunchingWithOptions` before `return super.application(...)`.
-Import `CleverTapSDK`:
+Import `CleverTapSDK` and `clevertap_plugin`:
 
 ```swift
 CleverTap.autoIntegrate()
+CleverTapPlugin.sharedInstance()?.applicationDidLaunch(options: launchOptions)
 ```
 
 Do not call `CleverTapPluginCustomTemplates.registerCustomTemplates`. It does not compile with a
@@ -326,17 +358,20 @@ WebengageInitializer.initialize(this,
 The classes are `com.webengage.webengage_plugin.WebengageInitializer` and
 `com.webengage.sdk.android.WebEngageConfig`.
 
-iOS: add `WEGLicenseCode` to `Info.plist`. In `AppDelegate`, import `WebEngage` and
-`digia_webengage_plugin`. Start WebEngage with a `DigiaDelegateProxy`, held in a property so it
-stays alive. `DigiaSuppressPlugin.shared` is nil at launch, so use the proxy:
+iOS: add `WEGLicenseCode` to `Info.plist`. In `AppDelegate`, import `WebEngage`,
+`webengage_flutter` and `digia_webengage_plugin`. Hold the WebEngage bridge and a
+`DigiaDelegateProxy` in properties, and pass the proxy as the notification delegate. WebEngage
+keeps only a weak reference, and `DigiaSuppressPlugin.shared` can be nil at launch:
 
 ```swift
-import digia_webengage_plugin
-
+var bridge: WebEngagePlugin? = nil
 private let digiaNotifProxy = DigiaDelegateProxy()
 
+// in didFinishLaunchingWithOptions, after GeneratedPluginRegistrant.register(with: self):
+bridge = WebEngagePlugin()
+WebEngage.sharedInstance().pushNotificationDelegate = self.bridge
 WebEngage.sharedInstance().application(application,
-    didFinishLaunchingWithOptions: launchOptions ?? [:],
+    didFinishLaunchingWithOptions: launchOptions,
     notificationDelegate: digiaNotifProxy)
 ```
 
@@ -376,14 +411,14 @@ app has a `navigatorKey`, use `navigatorKey.currentContext!`.
 
 | ID | Rule | Severity | CEP | Detect | Fix |
 |---|---|---|---|---|---|
-| FL-01 | Core package added | fail | all | `digia_engage:` in `pubspec.yaml` | Run **Dependencies**. |
+| FL-01 | Core package added | fail | all | `digia_engage:` 2.3.0 or later in `pubspec.yaml` | Run **Dependencies**. |
 | FL-02 | CEP plugin and CEP SDK added | fail | clevertap, moengage, webengage | both packages from **Dependencies** in `pubspec.yaml` | Add the pair. |
-| FL-03 | `initialize` is awaited before `register` and `runApp` | fail | all | `await Digia.initialize(` in `main`, before `Digia.register(` (if any) and `runApp(` | Move the calls into that order. |
+| FL-03 | `initialize` started and plugin registered before `runApp` | fail | all | `Digia.initialize(` and `Digia.register(` (if any) in `main`, both before `runApp(`; `register` on either side of `initialize` | Use the order in **Initialize and register**. |
 | FL-04 | Real API key | fail | all | `apiKey:` value is not `digia_xxx` | Put the key from the Digia dashboard. |
 | FL-05 | One plugin registered | fail | clevertap, moengage, webengage | exactly one `Digia.register(` | Add the call from **Initialize and register**. |
 | FL-15 | No stray plugin | fail | digia | no `Digia.register(` | Remove the call, or ask the user which CEP to use. |
-| FL-16 | App events sent | fail | digia | `Digia.trackEvent(` in the analytics wrapper or next to each analytics event call; with no analytics, at least one | Add **Events**. |
-| FL-17 | User attributes sent | warn | digia | `Digia.setUserAttributes(` | Add **User attributes**. |
+| FL-16 | App events sent | fail | digia, dmc | `Digia.trackEvent(` in the analytics wrapper or next to each analytics event call; with no analytics, at least one | Add **Events**. |
+| FL-17 | User attributes sent | warn | digia, dmc | `Digia.setUserAttributes(` | Add **User attributes**. |
 | FL-18 | Selected tab anchored | warn | all | each bottom navigation item with a `DigiaAnchor` on `icon` and an `activeIcon` or `selectedIcon` has the same `anchorKey` on both | Wrap the active icon as **Anchors and slots** says. |
 | FL-06 | One `DigiaHost` in the app builder | fail | all | exactly one `DigiaHost(`, inside `builder:` | Add **Host and screen tracking**. |
 | FL-07 | Screen tracking | fail | all | `DigiaNavigatorObserver()` in `navigatorObservers` or GoRouter `observers`, or `Digia.setCurrentScreen(` | Add the observer. |
