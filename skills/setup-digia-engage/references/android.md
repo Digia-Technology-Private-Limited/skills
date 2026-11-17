@@ -1,7 +1,7 @@
 # Android
 
-Docs: `https://www.digia.tech/docs/developer/<cep>` (`clevertap`, `moengage`, `webengage`).
-Digia-managed campaigns (`digia`) have no docs page yet: follow this file.
+Docs: `https://www.digia.tech/docs/developer/<setup>` (`digia-cep` for `digia`, `clevertap`,
+`moengage`). For `dmc`, follow the CEP page, then the events and attributes from `digia-cep`.
 
 ## Dependencies
 
@@ -10,56 +10,79 @@ Digia-managed campaigns (`digia`) have no docs page yet: follow this file.
 | digia | `tech.digia:engage` |
 | clevertap | `tech.digia:engage` `tech.digia:engage-clevertap` |
 | moengage | `tech.digia:engage` `tech.digia:engage-moengage` |
-| webengage | `tech.digia:engage` `tech.digia:engage-webengage` |
+
+`dmc` uses the artifacts of its CEP.
 
 Read the latest versions from Maven Central:
 `https://repo1.maven.org/maven2/tech/digia/<artifact>/maven-metadata.xml` (`<release>`).
+`tech.digia:engage` must be 3.4.0 or later: older versions do not run Digia-managed campaigns.
 Add the artifacts to the app module, in the version catalog if the project has one. The
 repositories need `mavenCentral()`.
 
-With a CEP, keep the app's own CEP SDK. The SDK needs `minSdk` 24 or later.
+With a CEP, keep the app's own CEP SDK. The SDK needs `minSdk` 24 or later, 25 with CleverTap.
+Digia-managed campaigns need Jetpack Compose in the app.
 
 ## Initialize and register
 
-In `Application.onCreate`. Use the callback form: the two-argument `initialize` is a `suspend`
-function. Do not wrap it in `runBlocking`.
+In `Application.onCreate`: start the CEP SDK, register the plugin, then initialize. Register
+before `initialize`, so no campaign is missed.
 
 ```kotlin
+import com.digia.engage.Digia
+import com.digia.engage.DigiaConfig
+import com.digia.engage.clevertap.DigiaCleverTapPlugin
+
 class App : Application() {
     override fun onCreate() {
-        DigiaCleverTapPlugin.prepareCleverTapCustomTemplates() // CleverTap only, first line
-        ActivityLifecycleCallback.register(this)               // CleverTap only
+        ActivityLifecycleCallback.register(this) // CleverTap only, before super.onCreate()
         super.onCreate()
-        Digia.initialize(applicationContext, DigiaConfig(apiKey = "digia_xxx")) { _ -> }
         Digia.register(DigiaCleverTapPlugin(applicationContext)) // not for digia
+        Digia.initialize(applicationContext, DigiaConfig(apiKey = "digia_xxx"), callback = null)
     }
 }
 ```
+
+`initialize` returns once campaigns have loaded, or after 2 seconds. The form above does not
+block `onCreate`: the app starts at once and campaigns load in the background. To show campaigns
+before the first screen instead, call the `suspend` form from a coroutine, for example in the
+first activity:
+
+```kotlin
+lifecycleScope.launch {
+    Digia.initialize(applicationContext, DigiaConfig(apiKey = "digia_xxx"))
+    showHome()
+}
+```
+
+Never wrap `initialize` in `runBlocking`: it freezes the app.
+
+Optional `DigiaConfig` fields: `logLevel`, `actionHandlers` (handle deep links, web links and
+Custom KV commands yourself), `themeMode` (`auto`, `light` or `dark`) and `fontFamily`. Add one
+only when the user asks.
 
 | CEP | Register call |
 |---|---|
 | clevertap | `Digia.register(DigiaCleverTapPlugin(applicationContext))` (`com.digia.engage.clevertap`) |
 | moengage | `Digia.register(MoEngagePlugin(applicationContext))` (`com.digia.moengage`) |
-| webengage | `Digia.register(WebEngagePlugin())` (`com.digia.webengage`) |
 
-Start the CEP SDK before `register`, as its own docs say. Register one plugin. With `digia`,
-register no plugin: `initialize` is the whole setup.
+Start the CEP SDK before `register`, as its own docs say. Register one plugin. With `dmc`,
+register the plugin of its CEP. With `digia`, register no plugin: `initialize` is the whole
+setup.
 
 If the app has no `Application` class, create one and set `android:name` on `<application>` in
 `AndroidManifest.xml`.
 
 ## CEP native steps
 
-- CleverTap: call `DigiaCleverTapPlugin.prepareCleverTapCustomTemplates()` before CleverTap
-  starts. Without it, CleverTap drops every Digia campaign. Add `CLEVERTAP_ACCOUNT_ID` and
-  `CLEVERTAP_TOKEN` `<meta-data>` to `AndroidManifest.xml`. Ask the user for them. If they skip,
+- CleverTap: if the `Application` class does not extend `CleverTapApplication`, call
+  `ActivityLifecycleCallback.register(this)` before `super.onCreate()`. Add `CLEVERTAP_ACCOUNT_ID`
+  and `CLEVERTAP_TOKEN` `<meta-data>` to `AndroidManifest.xml`. Ask the user for them. If they skip,
   write `YOUR_CLEVERTAP_ACCOUNT_ID` and `YOUR_CLEVERTAP_TOKEN`. If the account has a region
   (for example `in1`), also add `CLEVERTAP_REGION`.
 - MoEngage: `MoEngage.initialiseDefaultInstance(MoEngage.Builder(this, "YOUR_MOENGAGE_APP_ID").build())`
   before `register`.
   Add `com.github.bumptech.glide:glide:4.16.0` to the app module. Without it, MoEngage stops the app
   when an in-app campaign with an image arrives.
-- WebEngage: start WebEngage as its docs say, before `register`.
 
 ## Host
 
@@ -127,13 +150,40 @@ Give the user the list of keys. The marketer selects the same keys in the Digia 
 
 ## Identity
 
-Next to the app's login and logout code: `Digia.setUserId(user.id)`, then on logout
-`Digia.clearUserId()` and `Digia.clearAllInlineContent()`. Keep the CEP's own login call.
+Next to the app's login and logout code: `Digia.setUserId(user.id)` after login, and
+`Digia.clearUserId()` on logout. Keep the CEP's own login call. The user ID is remembered across
+launches. Logout clears everything about the previous user, inline content included.
+
+### User hash
+
+Only if the team connects data (PostHog, Segment, Google Analytics) or turns on **Settings → User
+verification** in the Digia Engage Dashboard. Otherwise skip it. The app's server signs the user
+ID with the secret from **Settings → User verification** (HMAC-SHA256, as lowercase hex) and sends
+it to the app, for example in the login response. Never put the secret in the app. Pass it with
+the user ID:
+
+```kotlin
+Digia.setUserId(user.id, userHash = userHash)
+```
+
+If the server does not send a hash yet, tell the user. Do not compute it in the app.
+
+## More options
+
+If the app shows its own popup or a payment flow, stop campaigns from covering it:
+
+```kotlin
+Digia.setCampaignsSuppressed(true)   // the app's popup opens
+Digia.setCampaignsSuppressed(false)  // …and closes
+```
+
+While it is on, new popups are skipped, not saved for later. Inline content keeps showing. Add it
+only where the app has such a popup or flow.
 
 ## Digia-managed campaigns
 
-Only for `digia`. With a CEP, do not add `trackEvent` or `setUserAttributes`: the CEP receives
-the app's events and user data.
+Only for `digia` and `dmc`. With only a CEP, do not add `trackEvent` or `setUserAttributes`: the
+CEP receives the app's events and user data.
 
 A campaign triggers on app open, app foreground, a screen view (from **Screen tracking**), an
 anchor or slot becoming visible, or an event that the app sends. Add the events and user
@@ -206,17 +256,17 @@ It opens in debuggable builds only. Test with
 
 | ID | Rule | Severity | CEP | Detect | Fix |
 |---|---|---|---|---|---|
-| AN-01 | Core and CEP plugin added | fail | all | `tech.digia:engage` in Gradle files or the version catalog, and `tech.digia:engage-<cep>` unless the CEP is `digia` | Add **Dependencies**. |
+| AN-01 | Core and CEP plugin added | fail | all | `tech.digia:engage` 3.4.0 or later in Gradle files or the version catalog, and `tech.digia:engage-<cep>` unless the CEP is `digia` | Add **Dependencies**. |
 | AN-02 | Initialized in `Application.onCreate` | fail | all | `Digia.initialize(` in the class named by `android:name` | Add **Initialize and register**. |
 | AN-03 | Real API key | fail | all | `apiKey =` value is not `digia_xxx` | Put the key from the Digia dashboard. |
-| AN-04 | One plugin registered, after `initialize` and the CEP SDK start | fail | clevertap, moengage, webengage | exactly one `Digia.register(`, after `Digia.initialize(` and the CEP start call | Add the call from **Initialize and register**. |
+| AN-04 | One plugin registered, after the CEP SDK start and before `initialize` | fail | clevertap, moengage | exactly one `Digia.register(`, after the CEP start call and before `Digia.initialize(` | Add the call from **Initialize and register**. |
 | AN-05 | Host present | fail | all | `DigiaHost {` or `DigiaHostView` | Add **Host**. |
 | AN-06 | Screen tracking | fail | all | `DigiaScreen(` or `digiaScreen(` or `Digia.setCurrentScreen(` | Add **Screen tracking**. |
 | AN-07 | Identity | warn | all | `Digia.setUserId(` and `Digia.clearUserId(` | Add **Identity**. |
-| AN-08 | CleverTap native setup | fail | clevertap | `DigiaCleverTapPlugin.prepareCleverTapCustomTemplates()` first in `onCreate`, `ActivityLifecycleCallback.register(this)` before `super.onCreate()`, account ID in `AndroidManifest.xml` | Add the **CleverTap** step. |
-| AN-10 | Callback form of `initialize` | fail | all | `Digia.initialize(` with a trailing callback, and no `runBlocking` around it | Use the call from **Initialize and register**. |
+| AN-08 | CleverTap native setup | fail | clevertap | `ActivityLifecycleCallback.register(this)` before `super.onCreate()`, or the class extends `CleverTapApplication`; account ID in `AndroidManifest.xml` | Add the **CleverTap** step. |
+| AN-10 | `initialize` does not block | fail | all | `Digia.initialize(` with `callback = null` or a trailing callback, or the `suspend` form inside a coroutine; no `runBlocking` around it | Use the call from **Initialize and register**. |
 | AN-11 | MoEngage Glide | warn | moengage | `com.github.bumptech.glide:glide` in the app module or version catalog | Add Glide from the **MoEngage** step. |
 | AN-12 | No stray plugin | fail | digia | no `Digia.register(` | Remove the call, or ask the user which CEP to use. |
-| AN-13 | App events sent | fail | digia | `Digia.trackEvent(` in the analytics wrapper or next to each analytics event call; with no analytics, at least one | Add **Events**. |
-| AN-14 | User attributes sent | warn | digia | `Digia.setUserAttributes(` | Add **User attributes**. |
+| AN-13 | App events sent | fail | digia, dmc | `Digia.trackEvent(` in the analytics wrapper or next to each analytics event call; with no analytics, at least one | Add **Events**. |
+| AN-14 | User attributes sent | warn | digia, dmc | `Digia.setUserAttributes(` | Add **User attributes**. |
 | AN-15 | Selected tab anchored | warn | all | each Compose navigation item with a `DigiaAnchor` and a different selected icon has the same anchor key on both icons | Wrap both icons as **Anchors and slots** says. |

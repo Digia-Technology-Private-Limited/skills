@@ -1,8 +1,8 @@
 # Flutter
 
-Docs: `https://www.digia.tech/docs/developer/<cep>` (`clevertap`, `moengage`, `webengage`).
-Digia-managed campaigns (`digia`) have no Flutter docs page yet: follow this file. With `digia`, Digia decides on the
-device when a campaign shows.
+Docs: `https://www.digia.tech/docs/developer/<setup>`: `digia-cep` for `digia`, `clevertap`,
+`moengage` or `webengage`. For `dmc`, follow the CEP's page, plus the events and user attributes
+from `digia-cep`.
 
 ## Dependencies
 
@@ -12,6 +12,8 @@ device when a campaign shows.
 | clevertap | `flutter pub add digia_engage:^2.3.0 digia_engage_clevertap:^2.0.0 clevertap_plugin:^3.8.1` |
 | moengage | `flutter pub add digia_engage:^2.3.0 digia_moengage_plugin:^2.0.0 moengage_flutter:^10.5.0` |
 | webengage | `flutter pub add digia_engage:^2.3.0 digia_webengage_plugin:^2.0.0 webengage_flutter:^1.7.0` |
+
+`dmc` uses its CEP's packages.
 
 If pub cannot find `digia_engage_clevertap` 2.0.0, stop and tell the user. Do not use 1.x: it
 needs `digia_engage` 1.x.
@@ -32,7 +34,8 @@ dependency_overrides:
 App code that uses the old API can then fail, for example `precachePicture` in `flutter_svg` 1.
 Do not change that code. Tell the user each override and each error it causes.
 
-The SDK needs Dart 3.6 and Flutter 3.29 or later.
+`digia_engage` must be 2.3.0 or later. The SDK needs Dart 3.6 and Flutter 3.29 or later. The
+MoEngage and WebEngage plugins need Flutter 3.35 or later.
 
 iOS: set the deployment target to 15.0 or later. Xcode 27 rejects the `flutter create`
 default of 13.0. In `ios/Podfile`, set `platform :ios, '15.0'`, and set
@@ -67,16 +70,24 @@ Imports:
 
 ## Initialize and register
 
-In `main`, before `runApp`:
+In `main`, before `runApp`. Start the CEP first. Then start Digia and register the plugin on the
+next line, so no campaign is missed:
 
 ```dart
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Digia.initialize(DigiaConfig(apiKey: 'digia_xxx'));
+  final digiaReady = Digia.initialize(DigiaConfig(apiKey: 'digia_xxx'));
   Digia.register(DigiaCleverTapPlugin());
+  await digiaReady;
   runApp(const MyApp());
 }
 ```
+
+With `digia`, call only `await Digia.initialize(DigiaConfig(apiKey: 'digia_xxx'));`.
+
+`initialize` returns once campaigns load, or after 2 seconds. Awaiting it delays startup by up to
+2 seconds. To not wait, use `unawaited(digiaReady);` with `import 'dart:async';`. Events sent
+before it finishes are held for up to 10 seconds and replayed.
 
 | CEP | Register call |
 |---|---|
@@ -91,11 +102,13 @@ instance to the plugin. You also start MoEngage natively (**CEP native steps**).
 ```dart
 final moEngage = MoEngageFlutter('YOUR_MOENGAGE_APP_ID');
 moEngage.initialise();
-await Digia.initialize(DigiaConfig(apiKey: 'digia_xxx'));
+final digiaReady = Digia.initialize(DigiaConfig(apiKey: 'digia_xxx'));
 Digia.register(MoEngagePlugin(instance: moEngage));
+await digiaReady;
 ```
 
-Register one plugin. A second `register` replaces the first. With `digia`, register no plugin.
+Register one plugin. A second `register` replaces the first. With `dmc`, register its CEP's
+plugin. With `digia`, register no plugin.
 
 ## Host and screen tracking
 
@@ -168,18 +181,36 @@ Next to the app's existing login and logout code:
 ```dart
 await Digia.setUserId(user.id);   // login
 await Digia.clearUserId();        // logout
-Digia.clearAllInlineContent();    // logout
 ```
 
-Keep the CEP's own login call. It does not reach Digia. MoEngage: `moEngage.identifyUser(user.id)`
+Call `setUserId` after every login and on app start when a user is already logged in. Keep the
+CEP's own login call. It does not reach Digia. MoEngage: `moEngage.identifyUser(user.id)`
 on login, `moEngage.logout()` on logout.
 
 Put the API key where the app keeps its other keys, for example `--dart-define`. If the app has no
 such place, write it in `main`.
 
+### User hash
+
+Optional. Add it when the team connects data or turns on **Settings → User verification** in the
+Digia Engage Dashboard. The app's backend computes the hash. Pass it with the user ID:
+
+```dart
+await Digia.setUserId(user.id, userHash: userHash);
+```
+
+## More options
+
+If the app shows its own popups, onboarding or a payment flow, hold Digia campaigns while it does:
+
+```dart
+Digia.setCampaignsSuppressed(true);   // before the app's own flow
+Digia.setCampaignsSuppressed(false);  // after it
+```
+
 ## Digia-managed campaigns
 
-Only for `digia`. With a CEP, do not add `trackEvent` or `setUserAttributes`: the CEP receives
+Only for `digia` and `dmc`. With only a CEP, do not add `trackEvent` or `setUserAttributes`: the CEP receives
 the app's events and user data.
 
 A campaign triggers on app open, app foreground, a screen view (from **Host and screen
@@ -257,10 +288,11 @@ class MainApplication : FlutterApplication() {
 ```
 
 iOS `AppDelegate`, in `didFinishLaunchingWithOptions` before `return super.application(...)`.
-Import `CleverTapSDK`:
+Import `CleverTapSDK` and `clevertap_plugin`:
 
 ```swift
 CleverTap.autoIntegrate()
+CleverTapPlugin.sharedInstance()?.applicationDidLaunch(options: launchOptions)
 ```
 
 Do not call `CleverTapPluginCustomTemplates.registerCustomTemplates`. It does not compile with a
@@ -325,18 +357,19 @@ WebengageInitializer.initialize(this,
 The classes are `com.webengage.webengage_plugin.WebengageInitializer` and
 `com.webengage.sdk.android.WebEngageConfig`.
 
-iOS: add `WEGLicenseCode` to `Info.plist`. In `AppDelegate`, import `WebEngage` and
-`digia_webengage_plugin`. Start WebEngage with a `DigiaDelegateProxy`, held in a property so it
-stays alive. `DigiaSuppressPlugin.shared` is nil at launch, so use the proxy:
+iOS: add `WEGLicenseCode` to `Info.plist`. In `AppDelegate`, import `WebEngage`,
+`webengage_flutter` and `digia_webengage_plugin`. Hold the WebEngage bridge in a property, and
+pass `DigiaSuppressPlugin.shared` as the notification delegate:
 
 ```swift
-import digia_webengage_plugin
+var bridge: WebEngagePlugin? = nil
 
-private let digiaNotifProxy = DigiaDelegateProxy()
-
+// in didFinishLaunchingWithOptions, after GeneratedPluginRegistrant.register(with: self):
+bridge = WebEngagePlugin()
+WebEngage.sharedInstance().pushNotificationDelegate = self.bridge
 WebEngage.sharedInstance().application(application,
-    didFinishLaunchingWithOptions: launchOptions ?? [:],
-    notificationDelegate: digiaNotifProxy)
+    didFinishLaunchingWithOptions: launchOptions,
+    notificationDelegate: DigiaSuppressPlugin.shared)
 ```
 
 Without it, WebEngage renders the Digia campaign itself.
@@ -375,21 +408,21 @@ app has a `navigatorKey`, use `navigatorKey.currentContext!`.
 
 | ID | Rule | Severity | CEP | Detect | Fix |
 |---|---|---|---|---|---|
-| FL-01 | Core package added | fail | all | `digia_engage:` in `pubspec.yaml` | Run **Dependencies**. |
+| FL-01 | Core package added | fail | all | `digia_engage:` 2.3.0 or later in `pubspec.yaml` | Run **Dependencies**. |
 | FL-02 | CEP plugin and CEP SDK added | fail | clevertap, moengage, webengage | both packages from **Dependencies** in `pubspec.yaml` | Add the pair. |
-| FL-03 | `initialize` is awaited before `register` and `runApp` | fail | all | `await Digia.initialize(` in `main`, before `Digia.register(` (if any) and `runApp(` | Move the calls into that order. |
+| FL-03 | `initialize` started, plugin registered next, before `runApp` | fail | all | `Digia.initialize(` in `main`; `Digia.register(` (if any) on the next statement; both before `runApp(` | Use the order in **Initialize and register**. |
 | FL-04 | Real API key | fail | all | `apiKey:` value is not `digia_xxx` | Put the key from the Digia dashboard. |
 | FL-05 | One plugin registered | fail | clevertap, moengage, webengage | exactly one `Digia.register(` | Add the call from **Initialize and register**. |
 | FL-15 | No stray plugin | fail | digia | no `Digia.register(` | Remove the call, or ask the user which CEP to use. |
-| FL-16 | App events sent | fail | digia | `Digia.trackEvent(` in the analytics wrapper or next to each analytics event call; with no analytics, at least one | Add **Events**. |
-| FL-17 | User attributes sent | warn | digia | `Digia.setUserAttributes(` | Add **User attributes**. |
+| FL-16 | App events sent | fail | digia, dmc | `Digia.trackEvent(` in the analytics wrapper or next to each analytics event call; with no analytics, at least one | Add **Events**. |
+| FL-17 | User attributes sent | warn | digia, dmc | `Digia.setUserAttributes(` | Add **User attributes**. |
 | FL-18 | Selected tab anchored | warn | all | each bottom navigation item with a `DigiaAnchor` on `icon` and an `activeIcon` or `selectedIcon` has the same `anchorKey` on both | Wrap the active icon as **Anchors and slots** says. |
 | FL-06 | One `DigiaHost` in the app builder | fail | all | exactly one `DigiaHost(`, inside `builder:` | Add **Host and screen tracking**. |
 | FL-07 | Screen tracking | fail | all | `DigiaNavigatorObserver()` in `navigatorObservers` or GoRouter `observers`, or `Digia.setCurrentScreen(` | Add the observer. |
 | FL-08 | Identity | warn | all | `Digia.setUserId(` and `Digia.clearUserId(` | Add **Identity**. |
 | FL-09 | CleverTap native setup | fail | clevertap | `ActivityLifecycleCallback.register` in the Android `Application`, `CleverTap.autoIntegrate()` in `AppDelegate`, account ID on both platforms | Add the **CleverTap** steps. |
 | FL-10 | MoEngage started, same instance passed | fail | moengage | `MoEngagePlugin(instance:` with the initialised `MoEngageFlutter` | Add the **MoEngage** steps. |
-| FL-11 | WebEngage iOS delegate | fail | webengage | `DigiaDelegateProxy` held in a property and passed as `notificationDelegate` | Add the **WebEngage** steps. |
+| FL-11 | WebEngage iOS delegate | fail | webengage | `notificationDelegate: DigiaSuppressPlugin.shared` in `AppDelegate` | Add the **WebEngage** steps. |
 | FL-12 | iOS debug deeplink scheme | warn | all | `digia-engage` in `ios/Runner/Info.plist` `CFBundleURLSchemes` | Add **Debug deeplink**. |
 | FL-13 | iOS deployment target | fail | all | `platform :ios, '15.0'` or later in `ios/Podfile` | Add the iOS step in **Dependencies**. |
 | FL-14 | MoEngage Glide | fail | moengage | `com.github.bumptech.glide:glide` in `android/app/build.gradle(.kts)` | Add Glide from **MoEngage**. |

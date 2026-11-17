@@ -1,6 +1,6 @@
 ---
 name: setup-digia-engage
-description: Integrate the Digia Engage SDK into a React Native, Flutter, Android or iOS app with CleverTap, MoEngage, WebEngage or Digia-managed campaigns, or check an existing integration. Use when the user asks to add, set up, install, upgrade, audit or debug Digia Engage.
+description: Integrate the Digia Engage SDK into a React Native, Flutter, Android or iOS app with CleverTap, MoEngage, WebEngage (React Native and Flutter) or Digia-managed campaigns, or check an existing integration. Use when the user asks to add, set up, install, upgrade, audit or debug Digia Engage.
 ---
 
 # Set up Digia Engage
@@ -30,16 +30,25 @@ Detect the **stack** from the app root:
 | `.xcodeproj` or `Package.swift`, no RN or Flutter | iOS | [ios.md](references/ios.md) |
 
 Detect the **CEP** from dependencies: CleverTap, MoEngage or WebEngage SDK packages. Digia works
-with these three CEPs only. Any other CEP counts as none found.
+with CleverTap and MoEngage on every stack, and with WebEngage on React Native and Flutter only.
+Any other CEP counts as none found. WebEngage on native Android or iOS also counts as none found:
+tell the user that the Digia WebEngage plugin is not available for native apps.
 
 Ask the user, in one prompt. Use your question tool if you have one (for example
 `AskUserQuestion`), else ask in chat and wait:
 
 - Which setup to use. Always ask, even when the app has a CEP or already calls
-  `Digia.initialize`. Offer **Digia-managed campaigns**, which is `digia`, and **Digia with <the
-  CEP you found>** (one option for each CEP found). No CEP found: offer **Digia-managed
-  campaigns** and **Digia with CleverTap**, **MoEngage** or **WebEngage**. The app already calls
-  `Digia.initialize`: mark the setup it uses now as current.
+  `Digia.initialize`. Offer:
+  - **Digia-managed campaigns**, which is `digia`. Digia decides when each campaign shows. No CEP
+    plugin.
+  - **Digia with <the CEP you found>**. The CEP decides when each campaign shows, and Digia shows
+    it.
+  - **Digia with <the CEP you found> and Digia-managed campaigns**, which is `dmc`. As above, and
+    Digia also runs the campaigns that the campaign team marks **Digia decides**.
+
+  Offer the two CEP options for each CEP found. No CEP found: offer **Digia-managed campaigns**,
+  and **Digia with CleverTap** or **MoEngage** (React Native and Flutter: also **WebEngage**). The
+  app already calls `Digia.initialize`: mark the setup it uses now as current.
 - The Digia API key, if they have one. They can skip it and add it later.
 
 Read the stack reference now. Done when stack and CEP are both known.
@@ -47,7 +56,7 @@ Read the stack reference now. Done when stack and CEP are both known.
 ## 3. Load the rules
 
 From the **Check** table in the stack reference, keep the rules whose CEP column is `all` or
-names this CEP.
+names this CEP. For `dmc`, also keep the rules marked `dmc`.
 
 Done when you hold the list of applicable rule IDs.
 
@@ -69,8 +78,8 @@ Follow the stack reference, section by section, for this CEP:
 3. Add initialize, plugin registration, host, screen tracking and the CEP native steps.
 4. Add anchors to the bottom navigation, and slots, as **Anchors and slots** in the stack
    reference says.
-5. For `digia`, add events and user attributes as **Digia-managed campaigns** in the stack
-   reference says.
+5. For `digia` and `dmc`, add events and user attributes as **Digia-managed campaigns** in the
+   stack reference says.
 6. Match the app's existing code style, entry points and navigation library.
 7. Add a short comment, one or two lines, at each change in the app's code. Say why the change is
    there, for example `// Digia Engage: shows in-app campaigns on top of the app.` Skip files that
@@ -137,6 +146,25 @@ Settings on the device. The screen opens in debug builds only:
 - Android: `adb shell am start -a android.intent.action.VIEW -d "digia-engage://_digia/debug-settings" <package>`
 - iOS Simulator: `xcrun simctl openurl booted "digia-engage://_digia/debug-settings"`
 - iOS device: open `digia-engage://_digia/debug-settings` from Safari or Notes.
+
+Also give the steps that apply to this setup:
+
+- **Dashboard setting**: in the Digia Engage Dashboard, under **Settings → General → CEP
+  integration**, choose **Digia** for `digia`. For `dmc`, keep the CEP and turn on **Allow
+  Digia-managed experiences**. The campaign team then picks **Digia decides** on each campaign
+  that Digia should run.
+- **CleverTap DigiaTemplate**: once per CleverTap project, before the first In-App campaign. Log
+  in a user on a debug build with CleverTap's `onUserLogin`, mark that user as a test profile in
+  CleverTap, and open the app. The plugin registers `DigiaTemplate`. Confirm it under **In-App →
+  Templates** in CleverTap.
+- **App version condition**: with a CEP, add an app version condition to each campaign: the
+  first app release with Digia Engage, or later. Older app versions cannot show the campaign.
+- **Own popups**: if the app shows its own popups or a payment flow, use
+  `Digia.setCampaignsSuppressed`, as **More options** in the stack reference says.
+- **User hash**: if the team connects data or turns on **Settings → User verification**, pass
+  `userHash`, as **Identity** in the stack reference says.
+- **Names to share**: give the campaign team the screen names, events and their properties, user
+  attributes, anchor keys and slot keys.
 
 A CEP campaign shows only when the app sends its trigger event to the CEP. A Digia-managed
 campaign shows when its trigger happens in the app: app open, a screen view, or an event the app

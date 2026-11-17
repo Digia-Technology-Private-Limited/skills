@@ -1,83 +1,89 @@
 # iOS
 
-Docs: `https://www.digia.tech/docs/developer/<cep>` (`clevertap`, `moengage`, `webengage`).
-Digia-managed campaigns (`digia`) have no docs page yet: follow this file.
+Docs: `https://www.digia.tech/docs/developer/<setup>` (`digia-cep` for `digia`, `clevertap`,
+`moengage`). For `dmc`, follow the CEP page, then the events and attributes from `digia-cep`.
 
 ## Dependencies
 
-With a CEP, add the CEP plugin package with Swift Package Manager, at its latest tag. It brings
-the `DigiaEngage` core with it. Do not add a second core package: SPM then finds `DigiaEngage`
-twice and resolution fails. With `digia`, add only the core package.
+Add the core package, and with a CEP also its plugin package, with Swift Package Manager at
+their latest tags. `dmc` uses the packages of its CEP.
 
-| CEP | Package URL | Product |
-|---|---|---|
-| digia | `https://github.com/Digia-Technology-Private-Limited/digia_engage_ios.git` | `DigiaEngage` |
-| clevertap | `https://github.com/Digia-Technology-Private-Limited/de_ios_clevertap.git` | `DigiaEngageCleverTap` |
-| moengage | `https://github.com/Digia-Technology-Private-Limited/de_ios_moengage.git` | `DigiaMoEngage` |
-| webengage | `https://github.com/Digia-Technology-Private-Limited/de_ios_webengage.git` | `DigiaEngageWebEngage` |
+| Package | URL | Product | When |
+|---|---|---|---|
+| Core | `https://github.com/Digia-Technology-Private-Limited/digia_engage_iOS.git` | `DigiaEngage` | always |
+| CleverTap | `https://github.com/Digia-Technology-Private-Limited/digia_engage_clevertap_iOS.git` | `DigiaEngageCleverTap` | clevertap |
+| MoEngage | `https://github.com/Digia-Technology-Private-Limited/digia_moengage_iOS.git` | `DigiaMoEngage` | moengage |
 
-Get the latest tag with `git ls-remote --tags <url>`. Edit `Package.swift`, or the Xcode project
-package references.
+Get the latest tag with `git ls-remote --tags <url>`. `DigiaEngage` must be 4.4.0 or later: older
+versions do not run Digia-managed campaigns. Edit `Package.swift`, for example
+`.package(url: "https://github.com/Digia-Technology-Private-Limited/digia_engage_iOS.git", from: "4.4.0")`,
+or the Xcode project package references.
 
-If the app has a `Podfile` and no SPM packages, use CocoaPods: add `pod '<Product>'` (for example
-`pod 'DigiaEngage'` or `pod 'DigiaMoEngage'`). New Digia pod versions are published to the Digia
-spec repo, not CocoaPods trunk. Add these two lines at the very top of the `Podfile`. Keep the CDN
-line, or every other pod stops resolving:
+If the app has a `Podfile` and no SPM packages, use CocoaPods. New Digia pod versions are
+published to the Digia spec repo, not CocoaPods trunk. Add the two `source` lines at the very top
+of the `Podfile`. Keep the CDN line, or every other pod stops resolving:
 
 ```ruby
 source 'https://github.com/Digia-Technology-Private-Limited/digia-podspecs.git'
 source 'https://cdn.cocoapods.org/'
+
+platform :ios, '15.0'
+
+target 'YourApp' do
+  pod 'DigiaEngage', '~> 4.4'
+  pod 'DigiaEngageCleverTap' # with CleverTap; DigiaMoEngage with MoEngage
+end
 ```
 
 Then run `pod install --repo-update`. Keep `Podfile.lock` and commit the updated one. If CI caches
 `Pods/` or DerivedData, tell the user to clear that cache once. Details:
 `https://www.digia.tech/docs/developer/reference/ios-spec-repo/`.
 
-Set the deployment target to iOS 15.0 or later. The SDK shows nothing below iOS 17.0. If the target
-is below 17.0, tell the user.
+Set the deployment target to iOS 15.0 or later, 16.0 with CleverTap or MoEngage. The app builds
+from that version, but campaigns show only on iOS 17 and later. If the target is below 17.0, tell
+the user.
 
 ## Initialize and register
 
 In the app's launch code (`App.init` with SwiftUI, or `application(_:didFinishLaunchingWithOptions:)`):
+start the CEP SDK, register the plugin, then initialize. Register before `initialize`, so no
+campaign is missed.
 
 ```swift
 import DigiaEngage
 import DigiaEngageCleverTap
 
-Task {
-    try await Digia.initialize(DigiaConfig(apiKey: "digia_xxx"))
-    Digia.register(DigiaCleverTapPlugin()) // not for digia
-}
+CleverTap.autoIntegrate()              // CleverTap only
+Digia.register(DigiaCleverTapPlugin()) // not for digia
+Task { try? await Digia.initialize(DigiaConfig(apiKey: "digia_xxx")) }
 ```
+
+`initialize` returns once campaigns have loaded, or after 2 seconds. The `Task` above does not
+block launch: the app starts at once and campaigns load in the background. To show campaigns
+before the first screen instead, `try await Digia.initialize(...)` before you show it. Startup can
+then take up to 2 seconds longer.
+
+Optional `DigiaConfig` fields: `logLevel`, `actionHandlers` (handle deep links, web links and
+Custom KV commands yourself), `themeMode` (`auto`, `light` or `dark`) and `fontFamily`. Add one
+only when the user asks.
 
 | CEP | Import | Register call |
 |---|---|---|
 | clevertap | `DigiaEngageCleverTap` | `Digia.register(DigiaCleverTapPlugin())` |
 | moengage | `DigiaMoEngage` | `Digia.register(MoEngagePlugin())` |
-| webengage | `DigiaEngageWebEngage` | `Digia.register(DigiaWebEngagePlugin())` |
 
-Start the CEP SDK before `register`. Register one plugin. With `digia`, register no plugin and
-import only `DigiaEngage`.
+Start the CEP SDK before `register`. Register one plugin. With `dmc`, register the plugin of its
+CEP. With `digia`, register no plugin and import only `DigiaEngage`.
 
 ## CEP native steps
 
-- CleverTap: before `register`, call `DigiaCleverTapPlugin.prepareCleverTapCustomTemplates()`
-  then `CleverTap.autoIntegrate()`. Add `CleverTapAccountID` and `CleverTapToken` to
+- CleverTap: call `CleverTap.autoIntegrate()` before `register`. Add `CleverTapAccountID` and
+  `CleverTapToken` to
   `Info.plist`. Ask the user for them. If they skip, write `YOUR_CLEVERTAP_ACCOUNT_ID` and
   `YOUR_CLEVERTAP_TOKEN`. If the account has a region (for example `in1`), also add
   `CleverTapRegion`.
 - MoEngage: start MoEngage with `MoEngage.sharedInstance.initializeDefaultInstance(...)` as its
   docs say, before `register`.
-- WebEngage: start WebEngage with the Digia delegate. WebEngage accepts one delegate, at start only:
-
-  ```swift
-  WebEngage.sharedInstance().application(application,
-      didFinishLaunchingWithOptions: launchOptions,
-      notificationDelegate: DigiaWebEngagePlugin.notificationDelegate)
-  ```
-
-  The plugin bundles the WebEngage SDK. Remove a separate WebEngage package or pod before you add
-  the plugin.
 
 ## Host
 
@@ -137,13 +143,40 @@ Give the user the list of keys. The marketer selects the same keys in the Digia 
 
 ## Identity
 
-Next to the app's login and logout code: `Digia.setUserId(user.id)`, then on logout
-`Digia.clearUserId()` and `Digia.clearAllInlineContent()`. Keep the CEP's own login call.
+Next to the app's login and logout code: `Digia.setUserId(user.id)` after login, and
+`Digia.clearUserId()` on logout. Keep the CEP's own login call. The user ID is remembered across
+launches. Logout clears everything about the previous user, inline content included.
+
+### User hash
+
+Only if the team connects data (PostHog, Segment, Google Analytics) or turns on **Settings → User
+verification** in the Digia Engage Dashboard. Otherwise skip it. The app's server signs the user
+ID with the secret from **Settings → User verification** (HMAC-SHA256, as lowercase hex) and sends
+it to the app, for example in the login response. Never put the secret in the app. Pass it with
+the user ID:
+
+```swift
+Digia.setUserId(user.id, userHash: userHash)
+```
+
+If the server does not send a hash yet, tell the user. Do not compute it in the app.
+
+## More options
+
+If the app shows its own popup or a payment flow, stop campaigns from covering it:
+
+```swift
+Digia.setCampaignsSuppressed(true)   // the app's popup opens
+Digia.setCampaignsSuppressed(false)  // …and closes
+```
+
+While it is on, new popups are skipped, not saved for later. Inline content keeps showing. Add it
+only where the app has such a popup or flow.
 
 ## Digia-managed campaigns
 
-Only for `digia`. With a CEP, do not add `trackEvent` or `setUserAttributes`: the CEP receives
-the app's events and user data.
+Only for `digia` and `dmc`. With only a CEP, do not add `trackEvent` or `setUserAttributes`: the
+CEP receives the app's events and user data.
 
 A campaign triggers on app open, app foreground, a screen view (from **Screen tracking**), an
 anchor or slot becoming visible, or an event that the app sends. Add the events and user
@@ -223,19 +256,18 @@ Get `topViewController` with the app's own helper. UIKit: call
 
 | ID | Rule | Severity | CEP | Detect | Fix |
 |---|---|---|---|---|---|
-| IO-01 | CEP plugin added, one core | fail | all | in `Package.swift`, `project.pbxproj` or `Podfile`: the CEP plugin URL or pod and no separate core package, or for `digia` the core package or `pod 'DigiaEngage'` only | Add **Dependencies**. |
-| IO-02 | Initialized at launch | fail | all | `try await Digia.initialize(` in the app launch code | Add **Initialize and register**. |
+| IO-01 | Core and CEP plugin added | fail | all | in `Package.swift`, `project.pbxproj` or `Podfile`: the `DigiaEngage` core at 4.4.0 or later, and the CEP plugin package or pod unless the CEP is `digia` | Add **Dependencies**. |
+| IO-02 | Initialized at launch | fail | all | `Digia.initialize(` in the app launch code | Add **Initialize and register**. |
 | IO-03 | Real API key | fail | all | `apiKey:` value is not `digia_xxx` | Put the key from the Digia dashboard. |
-| IO-04 | One plugin registered, after `initialize` and the CEP SDK start | fail | clevertap, moengage, webengage | exactly one `Digia.register(`, after `Digia.initialize(` and the CEP start call | Add the call from **Initialize and register**. |
+| IO-04 | One plugin registered, after the CEP SDK start and before `initialize` | fail | clevertap, moengage | exactly one `Digia.register(`, after the CEP start call and before `Digia.initialize(` | Add the call from **Initialize and register**. |
 | IO-05 | Host present | fail | all | exactly one `DigiaHost` | Add **Host**. |
 | IO-06 | Screen tracking | fail | all | `Digia.setCurrentScreen(` or `digiaScreen(` | Add **Screen tracking**. |
 | IO-07 | Identity | warn | all | `Digia.setUserId(` and `Digia.clearUserId(` | Add **Identity**. |
-| IO-08 | Deployment target | warn | all | `IPHONEOS_DEPLOYMENT_TARGET` at 17.0 or above | Tell the user that devices below iOS 17 show no campaigns. |
-| IO-09 | CleverTap native setup | fail | clevertap | `prepareCleverTapCustomTemplates()` before `CleverTap.autoIntegrate()`, `CleverTapAccountID` in `Info.plist` | Add the **CleverTap** step. |
-| IO-10 | WebEngage delegate | fail | webengage | `notificationDelegate: DigiaWebEngagePlugin.notificationDelegate` | Add the **WebEngage** step. |
+| IO-08 | Deployment target | warn | all | `IPHONEOS_DEPLOYMENT_TARGET` at 17.0 or above; it must be at least 15.0, or 16.0 with CleverTap or MoEngage, or the build fails | Raise it to the minimum, and tell the user that devices below iOS 17 show no campaigns. |
+| IO-09 | CleverTap native setup | fail | clevertap | `CleverTap.autoIntegrate()` before `Digia.register(`, `CleverTapAccountID` in `Info.plist` | Add the **CleverTap** step. |
 | IO-11 | Debug deeplink | warn | all | `digia-engage` in `CFBundleURLSchemes` and `Digia.handleDeepLink(` | Add **Debug deeplink**. |
 | IO-12 | No stray plugin | fail | digia | no `Digia.register(` | Remove the call, or ask the user which CEP to use. |
-| IO-13 | App events sent | fail | digia | `Digia.trackEvent(` in the analytics wrapper or next to each analytics event call; with no analytics, at least one | Add **Events**. |
-| IO-14 | User attributes sent | warn | digia | `Digia.setUserAttributes(` | Add **User attributes**. |
+| IO-13 | App events sent | fail | digia, dmc | `Digia.trackEvent(` in the analytics wrapper or next to each analytics event call; with no analytics, at least one | Add **Events**. |
+| IO-14 | User attributes sent | warn | digia, dmc | `Digia.setUserAttributes(` | Add **User attributes**. |
 | IO-15 | Selected tab anchored | warn | all | each custom tab button wrapped in `DigiaAnchor` keeps one anchor key for its selected and normal states | Wrap the button as **Anchors and slots** says. |
 | IO-16 | Digia spec repo | fail | all | with a `Podfile`: `digia-podspecs.git` and `cdn.cocoapods.org` `source` lines at its top | Add the lines from **Dependencies** and run `pod install --repo-update`. |
