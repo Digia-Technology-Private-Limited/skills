@@ -14,10 +14,11 @@ SDK code disagree, the skill follows the code.
   (`@digia-engage/core`): `initialize` only, no plugin. Add `Digia.trackEvent` in the analytics
   wrapper, next to each analytics event call, or at key actions, and `Digia.setUserAttributes` from
   the analytics user properties or the user model. `dmc` adds them too.
-- Call order: Android and iOS start the CEP, register the plugin, then initialize. React Native
-  registers the plugin, then initializes.
-  Flutter starts `Digia.initialize`, registers the plugin on the next line, then awaits it.
-  Waiting is optional on every stack.
+- Call order: start the CEP, register the plugin, then initialize. `register` works on either side
+  of `initialize` on every stack; register early, right after the CEP start, so the plugin sees the
+  first CEP trigger. Flutter starts `Digia.initialize`, registers the plugin on the next line, then
+  awaits it. Waiting is optional on every stack. CEP triggers that arrive before Digia is ready are
+  held, not dropped.
 - Minimum versions: React Native core 3.4.0 (React Native 0.83+, React 19.2+), Android 3.4.0, iOS
   `DigiaEngage` 4.4.0, Flutter `digia_engage` 2.3.0.
 - CleverTap: Android, iOS and React Native call
@@ -27,9 +28,12 @@ SDK code disagree, the skill follows the code.
   profile on a debug build. The minimums are Android minSdk 24 and iOS 15.0 for every CEP. Flutter
   iOS adds `CleverTapPlugin.sharedInstance()?.applicationDidLaunch`.
 - iOS: add the `DigiaEngage` core and the CEP plugin package (`digia_engage_clevertap_iOS`,
-  `digia_moengage_iOS`). Digia pods come from the Digia spec repo.
-- WebEngage: removed from native Android and iOS. Kept on React Native and Flutter. Flutter iOS
-  keeps `DigiaDelegateProxy` as the WebEngage notification delegate, as the plugin's code requires.
+  `digia_moengage_iOS`, `de_ios_webengage`). Digia pods come from the Digia spec repo.
+- WebEngage on every stack. Native Android adds `tech.digia:engage-webengage` and
+  `Digia.register(WebEngagePlugin())`; it brings WebEngage `android-sdk` 5.1.x and rejects 5.2.0+.
+  Native iOS adds `DigiaEngageWebEngage`, passes `DigiaWebEngagePlugin.notificationDelegate` to the
+  WebEngage start, and registers right after it. Flutter iOS keeps `DigiaDelegateProxy` as the
+  WebEngage notification delegate, as the plugin's code requires.
 - React Native plugins are thin native shells and take no arguments: `new DigiaCleverTapPlugin()`,
   `new DigiaMoEngagePlugin()`. `createCleverTapClient` is gone. `clevertap-react-native`,
   `react-native-moengage` and `react-native-webengage` are optional; `react-native-moengage`, when
@@ -51,12 +55,15 @@ SDK code disagree, the skill follows the code.
 - Slots: add one at the top of the home screen and each static content screen without asking.
   Ask before adding one in a list, grid or form.
 - Check: new AN-12..15, IO-12..16 and RN-18..21. Events and attributes rules apply to `digia` and
-  `dmc`. AN-04, IO-04 and RN-03 now require `register` before `initialize`. AN-01, IO-01, RN-01 and
-  FL-01 check the minimum versions. AN-08, IO-09 and RN-10 check the prepare call. RN-02 checks the
+  `dmc`. AN-04, IO-04, RN-03 and FL-03 accept `register` on either side of `initialize`. RN-03
+  finds a call to `Digia.register(` with a plugin instance in any form. New AN-16 (WebEngage SDK
+  range), IO-17 (WebEngage delegate) and IO-18 (WebEngage plugin registered early). AN-01, IO-01,
+  RN-01 and FL-01 check the minimum versions. AN-08, IO-09 and RN-10 check the prepare call. RN-02 checks the
   plugin package and the `react-native-moengage` range. RN-11 checks the native MoEngage start.
   RN-12 checks the WebEngage Podfile flag. AN-10 accepts the `suspend` form. IO-08 states the build
-  minimums. FL-03 checks the new Flutter order. FL-11 checks `DigiaDelegateProxy`. IO-10 (native
-  WebEngage) and RN-14, RN-16 and RN-17 are removed.
+  minimums. FL-11 checks `DigiaDelegateProxy`. RN-14, RN-16 and RN-17 are removed.
+- New `references/shared.md` holds the version floors, call order, what is held before Digia is
+  ready and the debug log lines. The stack references link to it instead of repeating them.
 
 ## 1.4.0
 
