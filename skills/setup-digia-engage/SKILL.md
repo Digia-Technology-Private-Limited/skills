@@ -1,6 +1,6 @@
 ---
 name: setup-digia-engage
-description: Integrate the Digia Engage SDK into a React Native, Flutter, Android or iOS app with CleverTap, MoEngage, WebEngage (React Native and Flutter) or Digia-managed campaigns, or check an existing integration. Use when the user asks to add, set up, install, upgrade, audit or debug Digia Engage.
+description: Integrate the Digia Engage SDK into a React Native, Flutter, Android or iOS app with CleverTap, MoEngage, WebEngage or Digia-managed campaigns, or check an existing integration. Use when the user asks to add, set up, install, upgrade, audit or debug Digia Engage.
 ---
 
 # Set up Digia Engage
@@ -30,9 +30,7 @@ Detect the **stack** from the app root:
 | `.xcodeproj` or `Package.swift`, no RN or Flutter | iOS | [ios.md](references/ios.md) |
 
 Detect the **CEP** from dependencies: CleverTap, MoEngage or WebEngage SDK packages. Digia works
-with CleverTap and MoEngage on every stack, and with WebEngage on React Native and Flutter only.
-Any other CEP counts as none found. WebEngage on native Android or iOS also counts as none found:
-tell the user that the Digia WebEngage plugin is not available for native apps.
+with all three on every stack. Any other CEP counts as none found.
 
 Ask the user, in one prompt. Use your question tool if you have one (for example
 `AskUserQuestion`), else ask in chat and wait:
@@ -47,11 +45,11 @@ Ask the user, in one prompt. Use your question tool if you have one (for example
     Digia also runs the campaigns that the campaign team marks **Digia decides**.
 
   Offer the two CEP options for each CEP found. No CEP found: offer **Digia-managed campaigns**,
-  and **Digia with CleverTap** or **MoEngage** (React Native and Flutter: also **WebEngage**). The
+  and **Digia with CleverTap**, **MoEngage** or **WebEngage**. The
   app already calls `Digia.initialize`: mark the setup it uses now as current.
 - The Digia API key, if they have one. They can skip it and add it later.
 
-Read the stack reference now. Done when stack and CEP are both known.
+Read the stack reference and [shared.md](references/shared.md) now. Done when stack and CEP are both known.
 
 ## 3. Load the rules
 
@@ -169,7 +167,7 @@ Also give the steps that apply to this setup:
 A CEP campaign shows only when the app sends its trigger event to the CEP. A Digia-managed
 campaign shows when its trigger happens in the app: app open, a screen view, or an event the app
 sends to Digia. The API key must be
-from the Digia project that has the campaign. The log line
-`Dropped — not found in the campaign store` usually means a wrong key.
+from the Digia project that has the campaign. For the log lines that explain a missing campaign,
+see [shared.md](references/shared.md#debug-log-lines).
 
 Done when every applicable rule has a result and the report is shown.

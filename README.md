@@ -67,8 +67,8 @@ Or use the plugin system of your agent:
 |---|:-:|:-:|:-:|:-:|
 | React Native | ✅ | ✅ | ✅ | ✅ |
 | Flutter | ✅ | ✅ | ✅ | ✅ |
-| Android | ✅ | ✅ (beta) | — | ✅ |
-| iOS | ✅ (beta) | ✅ (beta) | — | ✅ |
+| Android | ✅ | ✅ (beta) | ✅ (beta) | ✅ |
+| iOS | ✅ (beta) | ✅ (beta) | ✅ (beta) | ✅ |
 
 ## After setup
 

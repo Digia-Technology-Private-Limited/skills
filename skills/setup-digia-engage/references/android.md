@@ -1,7 +1,7 @@
 # Android
 
 Docs: `https://www.digia.tech/docs/developer/<setup>` (`digia-cep` for `digia`, `clevertap`,
-`moengage`). For `dmc`, follow the CEP page, then the events and attributes from `digia-cep`.
+`moengage`, `webengage`). For `dmc`, follow the CEP page, then the events and attributes from `digia-cep`.
 
 ## Dependencies
 
@@ -10,21 +10,23 @@ Docs: `https://www.digia.tech/docs/developer/<setup>` (`digia-cep` for `digia`, 
 | digia | `tech.digia:engage` |
 | clevertap | `tech.digia:engage` `tech.digia:engage-clevertap` |
 | moengage | `tech.digia:engage` `tech.digia:engage-moengage` |
+| webengage | `tech.digia:engage` `tech.digia:engage-webengage` |
 
 `dmc` uses the artifacts of its CEP.
 
 Read the latest versions from Maven Central:
 `https://repo1.maven.org/maven2/tech/digia/<artifact>/maven-metadata.xml` (`<release>`).
-`tech.digia:engage` must be 3.4.0 or later: older versions do not run Digia-managed campaigns.
+`tech.digia:engage` must meet the floor in [shared.md](shared.md#version-floors).
 Add the artifacts to the app module, in the version catalog if the project has one. The
 repositories need `mavenCentral()`.
 
-With a CEP, keep the app's own CEP SDK. The SDK needs `minSdk` 24 or later.
+With a CEP, keep the app's own CEP SDK. Set `minSdk` as [shared.md](shared.md#version-floors)
+says.
 
 ## Initialize and register
 
-In `Application.onCreate`: start the CEP SDK, register the plugin, then initialize. Register
-before `initialize`, so no campaign is missed.
+In `Application.onCreate`, in the order in [shared.md](shared.md#call-order): start the CEP SDK,
+register the plugin, then initialize.
 
 ```kotlin
 import com.digia.engage.Digia
@@ -42,7 +44,7 @@ class App : Application() {
 }
 ```
 
-`initialize` returns once campaigns have loaded, or after 2 seconds. The form above does not
+`initialize` returns as [shared.md](shared.md#held-before-ready) says. The form above does not
 block `onCreate`: the app starts at once and campaigns load in the background. To show campaigns
 before the first screen instead, call the `suspend` form from a coroutine, for example in the
 first activity:
@@ -64,6 +66,7 @@ only when the user asks.
 |---|---|
 | clevertap | `Digia.register(DigiaCleverTapPlugin(applicationContext))` (`com.digia.engage.clevertap`) |
 | moengage | `Digia.register(MoEngagePlugin(applicationContext))` (`com.digia.moengage`) |
+| webengage | `Digia.register(WebEngagePlugin())` (`com.digia.webengage`) |
 
 Start the CEP SDK before `register`, as its own docs say. Register one plugin. With `dmc`,
 register the plugin of its CEP. With `digia`, register no plugin: `initialize` is the whole
@@ -86,6 +89,11 @@ If the app has no `Application` class, create one and set `android:name` on `<ap
   before `register`.
   Add `com.github.bumptech.glide:glide:4.16.0` to the app module. Without it, MoEngage stops the app
   when an in-app campaign with an image arrives.
+- WebEngage: start WebEngage in the `Application` class as its own docs say, then register. The
+  plugin sets up the WebEngage in-app callback itself: add no callback. `engage-webengage` brings
+  `com.webengage:android-sdk` 5.1.x and rejects 5.2.0 and later, which fail DEX merging with the
+  core. If the app pins WebEngage 5.2.0 or later, tell the user and follow the docs'
+  dependency-conflicts page, with their consent.
 
 ## Host
 
@@ -262,7 +270,7 @@ It opens in debuggable builds only. Test with
 | AN-01 | Core and CEP plugin added | fail | all | `tech.digia:engage` 3.4.0 or later in Gradle files or the version catalog, and `tech.digia:engage-<cep>` unless the CEP is `digia` | Add **Dependencies**. |
 | AN-02 | Initialized in `Application.onCreate` | fail | all | `Digia.initialize(` in the class named by `android:name` | Add **Initialize and register**. |
 | AN-03 | Real API key | fail | all | `apiKey =` value is not `digia_xxx` | Put the key from the Digia dashboard. |
-| AN-04 | One plugin registered, after the CEP SDK start and before `initialize` | fail | clevertap, moengage | exactly one `Digia.register(`, after the CEP start call and before `Digia.initialize(` | Add the call from **Initialize and register**. |
+| AN-04 | One plugin registered, after the CEP SDK start | fail | clevertap, moengage, webengage | exactly one `Digia.register(`, after the CEP start call, either side of `Digia.initialize(` | Add the call from **Initialize and register**. |
 | AN-05 | Host present | fail | all | `DigiaHost {` or `DigiaHostView` | Add **Host**. |
 | AN-06 | Screen tracking | fail | all | `DigiaScreen(` or `digiaScreen(` or `Digia.setCurrentScreen(` | Add **Screen tracking**. |
 | AN-07 | Identity | warn | all | `Digia.setUserId(` and `Digia.clearUserId(` | Add **Identity**. |
@@ -273,3 +281,4 @@ It opens in debuggable builds only. Test with
 | AN-13 | App events sent | fail | digia, dmc | `Digia.trackEvent(` in the analytics wrapper or next to each analytics event call; with no analytics, at least one | Add **Events**. |
 | AN-14 | User attributes sent | warn | digia, dmc | `Digia.setUserAttributes(` | Add **User attributes**. |
 | AN-15 | Selected tab anchored | warn | all | each Compose navigation item with a `DigiaAnchor` and a different selected icon has the same anchor key on both icons | Wrap both icons as **Anchors and slots** says. |
+| AN-16 | WebEngage SDK in range | fail | webengage | no `com.webengage:android-sdk` 5.2.0 or later in Gradle files or the version catalog | Follow the **WebEngage** step. |
