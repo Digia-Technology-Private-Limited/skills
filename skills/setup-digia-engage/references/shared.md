@@ -7,11 +7,13 @@ Facts that hold on every stack. The stack reference gives the code.
 | Stack | Core | Platform |
 |---|---|---|
 | React Native | `@digia-engage/core` 3.4.0 | React Native 0.83+, React 19.2+; iOS pod iOS 15.0 |
-| Android | `tech.digia:engage` 3.4.0 | `minSdk` 24 |
+| Android | `tech.digia:engage` 3.4.1 | `minSdk` 24 |
 | iOS | `DigiaEngage` 4.4.0 | deployment target iOS 15.0 |
 | Flutter | `digia_engage` 2.3.0 | Dart 3.6, Flutter 3.29; iOS deployment target 15.0 |
 
-Older core versions do not run Digia-managed campaigns. On iOS, the app builds from 15.0, but
+Older core versions do not run Digia-managed campaigns. On Android, 3.4.0 and earlier also lack the
+`@Composable` annotations in the published artifact, so a Compose app crashes at launch with
+`NoSuchMethodError` on `DigiaHost`; use 3.4.1 or later. On iOS, the app builds from 15.0, but
 campaigns show only on iOS 17 and later, on every stack. If the target is below 17.0, tell the
 user.
 

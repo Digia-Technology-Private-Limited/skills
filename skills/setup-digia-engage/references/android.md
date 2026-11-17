@@ -267,7 +267,7 @@ It opens in debuggable builds only. Test with
 
 | ID | Rule | Severity | CEP | Detect | Fix |
 |---|---|---|---|---|---|
-| AN-01 | Core and CEP plugin added | fail | all | `tech.digia:engage` 3.4.0 or later in Gradle files or the version catalog, and `tech.digia:engage-<cep>` unless the CEP is `digia` | Add **Dependencies**. |
+| AN-01 | Core and CEP plugin added | fail | all | `tech.digia:engage` 3.4.1 or later in Gradle files or the version catalog, and `tech.digia:engage-<cep>` unless the CEP is `digia` | Add **Dependencies**. |
 | AN-02 | Initialized in `Application.onCreate` | fail | all | `Digia.initialize(` in the class named by `android:name` | Add **Initialize and register**. |
 | AN-03 | Real API key | fail | all | `apiKey =` value is not `digia_xxx` | Put the key from the Digia dashboard. |
 | AN-04 | One plugin registered, after the CEP SDK start | fail | clevertap, moengage, webengage | exactly one `Digia.register(`, after the CEP start call, either side of `Digia.initialize(` | Add the call from **Initialize and register**. |

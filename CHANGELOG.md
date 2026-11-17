@@ -19,7 +19,7 @@ SDK code disagree, the skill follows the code.
   first CEP trigger. Flutter starts `Digia.initialize`, registers the plugin on the next line, then
   awaits it. Waiting is optional on every stack. CEP triggers that arrive before Digia is ready are
   held, not dropped.
-- Minimum versions: React Native core 3.4.0 (React Native 0.83+, React 19.2+), Android 3.4.0, iOS
+- Minimum versions: React Native core 3.4.0 (React Native 0.83+, React 19.2+), Android 3.4.1, iOS
   `DigiaEngage` 4.4.0, Flutter `digia_engage` 2.3.0.
 - CleverTap: Android, iOS and React Native call
   `DigiaCleverTapPlugin.prepareCleverTapCustomTemplates()` natively, before CleverTap starts. React
