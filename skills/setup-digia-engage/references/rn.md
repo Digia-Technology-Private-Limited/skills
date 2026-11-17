@@ -3,8 +3,8 @@
 Docs: `https://www.digia.tech/docs/developer/<setup>`: `digia-cep` for `digia`, `clevertap`,
 `moengage` or `webengage`. For `dmc`, follow the CEP's page, plus the events and user attributes
 from `digia-cep`.
-Get the latest versions with `npm view <package> version`. `@digia-engage/core` must be 3.4.0 or
-later. The app needs React Native 0.83+ and React 19.2+.
+Get the latest versions with `npm view <package> version`. `@digia-engage/core` and the app must
+meet the floors in [shared.md](shared.md#version-floors).
 
 ## Dependencies
 
@@ -56,7 +56,7 @@ the app already uses them for native code, so the next prebuild keeps them.
 ## Initialize and register
 
 Put this in the app's startup code, once. With no such place, use a `useEffect` in the root
-component. Register the plugin, then initialize Digia:
+component. Register the plugin, then initialize Digia, as [shared.md](shared.md#call-order) says:
 
 ```tsx
 import { useEffect } from 'react';
@@ -73,9 +73,9 @@ useEffect(() => {
 
 With `digia`, call only `Digia.initialize({ apiKey: 'digia_xxx' }).catch(console.error);`.
 
-`initialize` returns once campaigns load, or after 2 seconds. Awaiting it delays startup by up to
-2 seconds. To not wait, call it without `await` and keep `.catch(console.error)`. Events sent
-before it finishes are held for up to 10 seconds and replayed.
+Awaiting `initialize` delays startup until it returns: see
+[shared.md](shared.md#held-before-ready) for when, and what is held until then. To not wait, call
+it without `await` and keep `.catch(console.error)`.
 
 Optional config fields:
 
@@ -247,7 +247,7 @@ of `ios/Podfile`:
 ENV['WEBENGAGE_DISABLE_SPM'] = 'true'
 ```
 
-The iOS pod needs iOS 15.0.
+The iOS pods need the deployment target in [shared.md](shared.md#version-floors).
 
 ### Digia
 
@@ -333,7 +333,7 @@ return `RCTLinkingManager.application(app, open: url, options: options)`.
 |---|---|---|---|---|---|
 | RN-01 | Core package installed | fail | all | `@digia-engage/core` 3.4.0 or later in `package.json` | Install or upgrade it. |
 | RN-02 | CEP plugin installed | fail | clevertap, moengage, webengage | the plugin package from **Dependencies** in `package.json`; `react-native-moengage`, if present, is 12.6.x to 12.9.x | Install the plugin. |
-| RN-03 | Plugin registered before `initialize` | fail | clevertap, moengage, webengage | `await Digia.register(` before `Digia.initialize(` | Move `register` before `initialize`, as **Initialize and register** says. |
+| RN-03 | Plugin registered | fail | clevertap, moengage, webengage | a call to `Digia.register(` with a plugin instance, in any form: awaited or not, on its own line, with the plugin in a variable, or chained; before or after `Digia.initialize(` | Add the call from **Initialize and register**. |
 | RN-04 | Real API key | fail | all | `apiKey:` value is not `digia_xxx` | Put the key from the Digia dashboard. |
 | RN-05 | One `<DigiaHost />`, last child of the root | fail | all | exactly one `<DigiaHost` in the source | Add it after the navigator. |
 | RN-06 | One plugin registered | fail | all | one `Digia.register(`; for `digia`, none | Add or remove the call as **Initialize and register** says. |

@@ -34,9 +34,9 @@ dependency_overrides:
 App code that uses the old API can then fail, for example `precachePicture` in `flutter_svg` 1.
 Do not change that code. Tell the user each override and each error it causes.
 
-`digia_engage` must be 2.3.0 or later. The SDK needs Dart 3.6 and Flutter 3.29 or later.
+`digia_engage`, Dart and Flutter must meet the floors in [shared.md](shared.md#version-floors).
 
-iOS: set the deployment target to 15.0 or later. Xcode 27 rejects the `flutter create`
+iOS: set the deployment target to 15.0 or later, as [shared.md](shared.md#version-floors) says. Xcode 27 rejects the `flutter create`
 default of 13.0. In `ios/Podfile`, set `platform :ios, '15.0'`, and set
 `IPHONEOS_DEPLOYMENT_TARGET = 15.0` in `ios/Runner.xcodeproj/project.pbxproj`. If pods still
 report 13.0, add this inside the Podfile's `post_install` loop, after
@@ -51,7 +51,7 @@ end
 `flutter build ios` shows the deployment target error only as a warning. It then prints
 "Encountered error while building for simulator".
 
-Campaigns show from iOS 17.0.
+Campaigns show from iOS 17: see [shared.md](shared.md#version-floors).
 
 If the app already has the CEP SDK, leave it out of the command, so its version stays. The Digia
 plugins do not support the next major CEP SDK version (`clevertap_plugin` 4, `moengage_flutter` 11,
@@ -70,7 +70,9 @@ Imports:
 ## Initialize and register
 
 In `main`, before `runApp`. Start the CEP first. Then start Digia and register the plugin on the
-next line, so no campaign is missed:
+next line. `register` works on either side of `initialize` (see
+[shared.md](shared.md#call-order)), but before it the SDK logs a misleading
+`register() ignored` error:
 
 ```dart
 Future<void> main() async {
@@ -84,9 +86,9 @@ Future<void> main() async {
 
 With `digia`, call only `await Digia.initialize(DigiaConfig(apiKey: 'digia_xxx'));`.
 
-`initialize` returns once campaigns load, or after 2 seconds. Awaiting it delays startup by up to
-2 seconds. To not wait, use `unawaited(digiaReady);` with `import 'dart:async';`. Events sent
-before it finishes are held for up to 10 seconds and replayed.
+Awaiting `initialize` delays startup until it returns: see
+[shared.md](shared.md#held-before-ready) for when, and what is held until then. To not wait, use
+`unawaited(digiaReady);` with `import 'dart:async';`.
 
 | CEP | Register call |
 |---|---|
@@ -411,7 +413,7 @@ app has a `navigatorKey`, use `navigatorKey.currentContext!`.
 |---|---|---|---|---|---|
 | FL-01 | Core package added | fail | all | `digia_engage:` 2.3.0 or later in `pubspec.yaml` | Run **Dependencies**. |
 | FL-02 | CEP plugin and CEP SDK added | fail | clevertap, moengage, webengage | both packages from **Dependencies** in `pubspec.yaml` | Add the pair. |
-| FL-03 | `initialize` started, plugin registered next, before `runApp` | fail | all | `Digia.initialize(` in `main`; `Digia.register(` (if any) on the next statement; both before `runApp(` | Use the order in **Initialize and register**. |
+| FL-03 | `initialize` started and plugin registered before `runApp` | fail | all | `Digia.initialize(` and `Digia.register(` (if any) in `main`, both before `runApp(`; `register` on either side of `initialize` | Use the order in **Initialize and register**. |
 | FL-04 | Real API key | fail | all | `apiKey:` value is not `digia_xxx` | Put the key from the Digia dashboard. |
 | FL-05 | One plugin registered | fail | clevertap, moengage, webengage | exactly one `Digia.register(` | Add the call from **Initialize and register**. |
 | FL-15 | No stray plugin | fail | digia | no `Digia.register(` | Remove the call, or ask the user which CEP to use. |
