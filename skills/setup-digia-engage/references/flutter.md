@@ -34,8 +34,7 @@ dependency_overrides:
 App code that uses the old API can then fail, for example `precachePicture` in `flutter_svg` 1.
 Do not change that code. Tell the user each override and each error it causes.
 
-`digia_engage` must be 2.3.0 or later. The SDK needs Dart 3.6 and Flutter 3.29 or later. The
-MoEngage and WebEngage plugins need Flutter 3.35 or later.
+`digia_engage` must be 2.3.0 or later. The SDK needs Dart 3.6 and Flutter 3.29 or later.
 
 iOS: set the deployment target to 15.0 or later. Xcode 27 rejects the `flutter create`
 default of 13.0. In `ios/Podfile`, set `platform :ios, '15.0'`, and set

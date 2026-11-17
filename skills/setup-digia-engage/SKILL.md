@@ -155,8 +155,8 @@ Also give the steps that apply to this setup:
   that Digia should run.
 - **CleverTap DigiaTemplate**: once per CleverTap project, before the first In-App campaign. Log
   in a user on a debug build with CleverTap's `onUserLogin`, mark that user as a test profile in
-  CleverTap, and open the app. The plugin registers `DigiaTemplate`. Confirm it under **In-App →
-  Templates** in CleverTap.
+  CleverTap, and open the app. `prepareCleverTapCustomTemplates()` registers `DigiaTemplate`
+  (on Flutter, the plugin does). Confirm it under **In-App → Templates** in CleverTap.
 - **App version condition**: with a CEP, add an app version condition to each campaign: the
   first app release with Digia Engage, or later. Older app versions cannot show the campaign.
 - **Own popups**: if the app shows its own popups or a payment flow, use

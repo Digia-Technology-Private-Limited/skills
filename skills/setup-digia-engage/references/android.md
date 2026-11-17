@@ -19,7 +19,7 @@ Read the latest versions from Maven Central:
 Add the artifacts to the app module, in the version catalog if the project has one. The
 repositories need `mavenCentral()`.
 
-With a CEP, keep the app's own CEP SDK. The SDK needs `minSdk` 24 or later, 25 with CleverTap.
+With a CEP, keep the app's own CEP SDK. The SDK needs `minSdk` 24 or later.
 Digia-managed campaigns need Jetpack Compose in the app.
 
 ## Initialize and register
@@ -36,6 +36,7 @@ class App : Application() {
     override fun onCreate() {
         ActivityLifecycleCallback.register(this) // CleverTap only, before super.onCreate()
         super.onCreate()
+        DigiaCleverTapPlugin.prepareCleverTapCustomTemplates() // CleverTap only, before CleverTap starts
         Digia.register(DigiaCleverTapPlugin(applicationContext)) // not for digia
         Digia.initialize(applicationContext, DigiaConfig(apiKey = "digia_xxx"), callback = null)
     }
@@ -75,7 +76,10 @@ If the app has no `Application` class, create one and set `android:name` on `<ap
 ## CEP native steps
 
 - CleverTap: if the `Application` class does not extend `CleverTapApplication`, call
-  `ActivityLifecycleCallback.register(this)` before `super.onCreate()`. Add `CLEVERTAP_ACCOUNT_ID`
+  `ActivityLifecycleCallback.register(this)` before `super.onCreate()`. After `super.onCreate()`,
+  call `DigiaCleverTapPlugin.prepareCleverTapCustomTemplates()` before anything that creates the
+  CleverTap instance, such as `CleverTapAPI.getDefaultInstance`. It registers the Digia template,
+  which CleverTap accepts only before it starts. Add `CLEVERTAP_ACCOUNT_ID`
   and `CLEVERTAP_TOKEN` `<meta-data>` to `AndroidManifest.xml`. Ask the user for them. If they skip,
   write `YOUR_CLEVERTAP_ACCOUNT_ID` and `YOUR_CLEVERTAP_TOKEN`. If the account has a region
   (for example `in1`), also add `CLEVERTAP_REGION`.
@@ -263,7 +267,7 @@ It opens in debuggable builds only. Test with
 | AN-05 | Host present | fail | all | `DigiaHost {` or `DigiaHostView` | Add **Host**. |
 | AN-06 | Screen tracking | fail | all | `DigiaScreen(` or `digiaScreen(` or `Digia.setCurrentScreen(` | Add **Screen tracking**. |
 | AN-07 | Identity | warn | all | `Digia.setUserId(` and `Digia.clearUserId(` | Add **Identity**. |
-| AN-08 | CleverTap native setup | fail | clevertap | `ActivityLifecycleCallback.register(this)` before `super.onCreate()`, or the class extends `CleverTapApplication`; account ID in `AndroidManifest.xml` | Add the **CleverTap** step. |
+| AN-08 | CleverTap native setup | fail | clevertap | `ActivityLifecycleCallback.register(this)` before `super.onCreate()`, or the class extends `CleverTapApplication`; `DigiaCleverTapPlugin.prepareCleverTapCustomTemplates()` in `onCreate` before any `CleverTapAPI` call; account ID in `AndroidManifest.xml` | Add the **CleverTap** step. |
 | AN-10 | `initialize` does not block | fail | all | `Digia.initialize(` with `callback = null` or a trailing callback, or the `suspend` form inside a coroutine; no `runBlocking` around it | Use the call from **Initialize and register**. |
 | AN-11 | MoEngage Glide | warn | moengage | `com.github.bumptech.glide:glide` in the app module or version catalog | Add Glide from the **MoEngage** step. |
 | AN-12 | No stray plugin | fail | digia | no `Digia.register(` | Remove the call, or ask the user which CEP to use. |

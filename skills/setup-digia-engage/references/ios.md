@@ -39,7 +39,7 @@ Then run `pod install --repo-update`. Keep `Podfile.lock` and commit the updated
 `Pods/` or DerivedData, tell the user to clear that cache once. Details:
 `https://www.digia.tech/docs/developer/reference/ios-spec-repo/`.
 
-Set the deployment target to iOS 15.0 or later, 16.0 with CleverTap or MoEngage. The app builds
+Set the deployment target to iOS 15.0 or later. The app builds
 from that version, but campaigns show only on iOS 17 and later. If the target is below 17.0, tell
 the user.
 
@@ -50,10 +50,12 @@ start the CEP SDK, register the plugin, then initialize. Register before `initia
 campaign is missed.
 
 ```swift
+import CleverTapSDK
 import DigiaEngage
 import DigiaEngageCleverTap
 
-CleverTap.autoIntegrate()              // CleverTap only
+DigiaCleverTapPlugin.prepareCleverTapCustomTemplates() // CleverTap only
+CleverTap.autoIntegrate()                              // CleverTap only
 Digia.register(DigiaCleverTapPlugin()) // not for digia
 Task { try? await Digia.initialize(DigiaConfig(apiKey: "digia_xxx")) }
 ```
@@ -77,9 +79,10 @@ CEP. With `digia`, register no plugin and import only `DigiaEngage`.
 
 ## CEP native steps
 
-- CleverTap: call `CleverTap.autoIntegrate()` before `register`. Add `CleverTapAccountID` and
-  `CleverTapToken` to
-  `Info.plist`. Ask the user for them. If they skip, write `YOUR_CLEVERTAP_ACCOUNT_ID` and
+- CleverTap: call `DigiaCleverTapPlugin.prepareCleverTapCustomTemplates()` before
+  `CleverTap.autoIntegrate()`, and both before `register`. The first call registers the Digia
+  template, which CleverTap accepts only before it starts. Add `CleverTapAccountID` and
+  `CleverTapToken` to `Info.plist`. Ask the user for them. If they skip, write `YOUR_CLEVERTAP_ACCOUNT_ID` and
   `YOUR_CLEVERTAP_TOKEN`. If the account has a region (for example `in1`), also add
   `CleverTapRegion`.
 - MoEngage: start MoEngage with `MoEngage.sharedInstance.initializeDefaultInstance(...)` as its
@@ -263,8 +266,8 @@ Get `topViewController` with the app's own helper. UIKit: call
 | IO-05 | Host present | fail | all | exactly one `DigiaHost` | Add **Host**. |
 | IO-06 | Screen tracking | fail | all | `Digia.setCurrentScreen(` or `digiaScreen(` | Add **Screen tracking**. |
 | IO-07 | Identity | warn | all | `Digia.setUserId(` and `Digia.clearUserId(` | Add **Identity**. |
-| IO-08 | Deployment target | warn | all | `IPHONEOS_DEPLOYMENT_TARGET` at 17.0 or above; it must be at least 15.0, or 16.0 with CleverTap or MoEngage, or the build fails | Raise it to the minimum, and tell the user that devices below iOS 17 show no campaigns. |
-| IO-09 | CleverTap native setup | fail | clevertap | `CleverTap.autoIntegrate()` before `Digia.register(`, `CleverTapAccountID` in `Info.plist` | Add the **CleverTap** step. |
+| IO-08 | Deployment target | warn | all | `IPHONEOS_DEPLOYMENT_TARGET` at 17.0 or above; it must be at least 15.0, or the build fails | Raise it to the minimum, and tell the user that devices below iOS 17 show no campaigns. |
+| IO-09 | CleverTap native setup | fail | clevertap | `DigiaCleverTapPlugin.prepareCleverTapCustomTemplates()` before `CleverTap.autoIntegrate()`, both before `Digia.register(`; `CleverTapAccountID` in `Info.plist` | Add the **CleverTap** step. |
 | IO-11 | Debug deeplink | warn | all | `digia-engage` in `CFBundleURLSchemes` and `Digia.handleDeepLink(` | Add **Debug deeplink**. |
 | IO-12 | No stray plugin | fail | digia | no `Digia.register(` | Remove the call, or ask the user which CEP to use. |
 | IO-13 | App events sent | fail | digia, dmc | `Digia.trackEvent(` in the analytics wrapper or next to each analytics event call; with no analytics, at least one | Add **Events**. |
