@@ -12,7 +12,7 @@ their latest tags. `dmc` uses the packages of its CEP.
 |---|---|---|---|
 | Core | `https://github.com/Digia-Technology-Private-Limited/digia_engage_iOS.git` | `DigiaEngage` | always |
 | CleverTap | `https://github.com/Digia-Technology-Private-Limited/digia_engage_clevertap_iOS.git` | `DigiaEngageCleverTap` | clevertap |
-| MoEngage | `https://github.com/Digia-Technology-Private-Limited/digia_moengage_iOS.git` | `DigiaMoEngage` | moengage |
+| MoEngage | `https://github.com/Digia-Technology-Private-Limited/de_ios_moengage.git` | `DigiaMoEngage` | moengage |
 
 Get the latest tag with `git ls-remote --tags <url>`. `DigiaEngage` must be 4.4.0 or later: older
 versions do not run Digia-managed campaigns. Edit `Package.swift`, for example

@@ -20,7 +20,6 @@ Add the artifacts to the app module, in the version catalog if the project has o
 repositories need `mavenCentral()`.
 
 With a CEP, keep the app's own CEP SDK. The SDK needs `minSdk` 24 or later.
-Digia-managed campaigns need Jetpack Compose in the app.
 
 ## Initialize and register
 

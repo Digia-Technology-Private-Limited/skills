@@ -357,18 +357,20 @@ The classes are `com.webengage.webengage_plugin.WebengageInitializer` and
 `com.webengage.sdk.android.WebEngageConfig`.
 
 iOS: add `WEGLicenseCode` to `Info.plist`. In `AppDelegate`, import `WebEngage`,
-`webengage_flutter` and `digia_webengage_plugin`. Hold the WebEngage bridge in a property, and
-pass `DigiaSuppressPlugin.shared` as the notification delegate:
+`webengage_flutter` and `digia_webengage_plugin`. Hold the WebEngage bridge and a
+`DigiaDelegateProxy` in properties, and pass the proxy as the notification delegate. WebEngage
+keeps only a weak reference, and `DigiaSuppressPlugin.shared` can be nil at launch:
 
 ```swift
 var bridge: WebEngagePlugin? = nil
+private let digiaNotifProxy = DigiaDelegateProxy()
 
 // in didFinishLaunchingWithOptions, after GeneratedPluginRegistrant.register(with: self):
 bridge = WebEngagePlugin()
 WebEngage.sharedInstance().pushNotificationDelegate = self.bridge
 WebEngage.sharedInstance().application(application,
     didFinishLaunchingWithOptions: launchOptions,
-    notificationDelegate: DigiaSuppressPlugin.shared)
+    notificationDelegate: digiaNotifProxy)
 ```
 
 Without it, WebEngage renders the Digia campaign itself.
@@ -421,7 +423,7 @@ app has a `navigatorKey`, use `navigatorKey.currentContext!`.
 | FL-08 | Identity | warn | all | `Digia.setUserId(` and `Digia.clearUserId(` | Add **Identity**. |
 | FL-09 | CleverTap native setup | fail | clevertap | `ActivityLifecycleCallback.register` in the Android `Application`, `CleverTap.autoIntegrate()` in `AppDelegate`, account ID on both platforms | Add the **CleverTap** steps. |
 | FL-10 | MoEngage started, same instance passed | fail | moengage | `MoEngagePlugin(instance:` with the initialised `MoEngageFlutter` | Add the **MoEngage** steps. |
-| FL-11 | WebEngage iOS delegate | fail | webengage | `notificationDelegate: DigiaSuppressPlugin.shared` in `AppDelegate` | Add the **WebEngage** steps. |
+| FL-11 | WebEngage iOS delegate | fail | webengage | `DigiaDelegateProxy` held in a property and passed as `notificationDelegate` | Add the **WebEngage** steps. |
 | FL-12 | iOS debug deeplink scheme | warn | all | `digia-engage` in `ios/Runner/Info.plist` `CFBundleURLSchemes` | Add **Debug deeplink**. |
 | FL-13 | iOS deployment target | fail | all | `platform :ios, '15.0'` or later in `ios/Podfile` | Add the iOS step in **Dependencies**. |
 | FL-14 | MoEngage Glide | fail | moengage | `com.github.bumptech.glide:glide` in `android/app/build.gradle(.kts)` | Add Glide from **MoEngage**. |
