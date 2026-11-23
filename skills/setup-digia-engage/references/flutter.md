@@ -377,6 +377,11 @@ WebEngage.sharedInstance().application(application,
 
 Without it, WebEngage renders the Digia campaign itself.
 
+## Gamification
+
+Flutter has no gamification yet: no games, no rewards page. Add nothing for it. If the user asks,
+tell them it is on Android, iOS and React Native only.
+
 ## Debug deeplink
 
 iOS: add `digia-engage` to `CFBundleURLSchemes` in `ios/Runner/Info.plist`. If the file has no

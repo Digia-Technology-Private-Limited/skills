@@ -56,3 +56,54 @@ Set `logLevel` to verbose to see these.
 | `register() ignored — called before initialize()…` | Flutter only. The plugin is still attached. Start `initialize` first, as [flutter.md](flutter.md) says, to avoid the line. |
 | `Dropping in-app — no host attached (reason=not_ready…)` | iOS WebEngage: the in-app arrived before `register`. Register right after the WebEngage start. |
 | `Held until Digia is ready` | iOS WebEngage: the in-app is held and shows when Digia is ready. |
+
+## Gamification
+
+Only when the client's Digia project has gamification turned on. Not everyone has it. The server
+picks each outcome. The SDK shows the games and draws the rewards page. Docs:
+`docs.digia.tech/developer/<setup>/gamification`, with `<setup>` one of `digia-cep`, `clevertap`,
+`moengage` or `webengage`.
+
+Version floor: the first core release with gamification, on each stack. It is `TBD`: no release
+has it yet. Flutter has no gamification.
+
+**User verification.** Gamification needs `Digia.setUserId`. With **Project settings → User
+verification** on in the dashboard, the app also passes `userHash`: HMAC-SHA256 of the trimmed
+user ID, keyed with that secret, as lowercase hex. Only the app's server computes it. Never put
+the secret in the app. With verification on and the hash missing or wrong:
+
+- A campaign that tries to start a game shows nothing. The server answers `notVerified`, and the
+  campaign timeline shows `user_not_verified`.
+- The rewards page gets HTTP 401 and shows its empty state.
+
+A call with no user ID is refused even with verification off. With verification off, any user ID
+is accepted and a campaign with rewards shows a go-live warning. The SDK keeps the user ID and
+hash across launches. `clearUserId` clears both.
+
+**Rewards page.** Full screen, drawn by the SDK: the user's game chances and their active, used
+and expired rewards. It needs an initialized SDK and a user. It closes an open game first. Test
+plays do not show on it. A link that ends in `_digia/rewards`, such as `myapp://_digia/rewards`,
+opens it. The SDK does not own the scheme: the app registers its own.
+
+**Floating entry and teaser.** No code. They show in the slot key `digia_rewards_widget`, which
+the SDK handles.
+
+**Reward links.** A reward's button follows its link. Placeholders: `{{code}}` (coupon rewards
+only), `{{grantId}}`, `{{rewardKey}}`, `{{campaignKey}}`. Routing:
+
+| Link | Goes to | Page or game |
+|---|---|---|
+| `http` or `https` | `actionHandlers` open-URL handler, else the system browser | The rewards page stays open. A game closes. |
+| Any other scheme | `actionHandlers` deep-link handler, else the system | Closes first. |
+| `javascript`, `data`, `file`, `blob`, `vbscript`, `intent`, `content` (iOS: not `content`) | Blocked, only logged | Stays. |
+
+A link with no scheme is refused. Use the app's own scheme for links into the app: an `https` link
+to the app's domain may open the browser instead. Treat the link as untrusted input. Tapping a
+reward does not mark it used.
+
+**Server side**, for the user to hand to their backend team:
+
+- Compute `userHash`, as above.
+- Webhooks `reward.won` and `submission-created`, with the signature check. `reward.won` does not
+  carry the reward link.
+- The reward used callback: the server tells Digia when a reward is used.

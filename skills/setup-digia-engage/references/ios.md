@@ -258,6 +258,44 @@ Values are `String`, number, `Bool` or `[String]`. Send dates as ISO 8601 string
 fields that are nil. Calls merge. `setUserAttributes` needs `setUserId` first.
 `Digia.clearUserId()` clears them.
 
+## Gamification
+
+Only if gamification is on for the client's Digia project. The facts behind these steps are in
+[shared.md](shared.md#gamification). The floating entry and the teaser need no code. Games and the
+rewards page show only on iOS 17 and later.
+
+**Identity is required.** Add **Identity** and **User hash**, even if neither was needed before.
+With **Project settings → User verification** on, a call without the right hash gets no games
+and an empty rewards page.
+
+**Rewards entry.** Where the app has a profile or account menu, add a "My rewards" item that opens
+the rewards page:
+
+```swift
+Digia.openRewards()
+```
+
+Call it on the main actor. It opens over the top-most view controller, and does nothing below
+iOS 17. Ask the user where the entry goes if the app has no such menu.
+
+**Rewards link.** A campaign or push can open the rewards page with `<scheme>://_digia/rewards`,
+using the app's own scheme. If `Info.plist` has no `CFBundleURLTypes` entry for that scheme, add
+one. Next to the debug link handler from **Debug deeplink**:
+
+```swift
+.onOpenURL { url in
+    if Digia.isRewardsDeepLink(url) { Digia.openRewards(); return }
+    guard Digia.isDebugSettingsDeepLink(url) else { return }
+    _ = Digia.handleDeepLink(url, from: topViewController)
+}
+```
+
+UIKit: make the same check in `scene(_:openURLContexts:)`.
+
+**Reward links.** A reward's button follows its link. To route those links through the app's own
+navigation, add `actionHandlers` to `DigiaConfig` (deep links and web links). Add it only when the
+user asks.
+
 ## Debug deeplink
 
 Add a `CFBundleURLTypes` entry with `digia-engage` in `CFBundleURLSchemes` to `Info.plist`. Route
@@ -299,3 +337,7 @@ Get `topViewController` with the app's own helper. UIKit: call
 | IO-16 | Digia spec repo | fail | all | with a `Podfile`: `digia-podspecs.git` and `cdn.cocoapods.org` `source` lines at its top | Add the lines from **Dependencies** and run `pod install --repo-update`. |
 | IO-17 | WebEngage delegate passed | fail | webengage | `notificationDelegate: DigiaWebEngagePlugin.notificationDelegate` in the WebEngage `didFinishLaunchingWithOptions` call | Add the **WebEngage** step. |
 | IO-18 | WebEngage plugin registered early | warn | webengage | `Digia.register(DigiaWebEngagePlugin())` in the same launch method as the WebEngage start, right after it | Move the call as the **WebEngage** step says. |
+| IO-19 | User hash passed | fail | gamification | `Digia.setUserId(` with `userHash:` | Add **User hash**. If the server does not send a hash yet, tell the user. |
+| IO-20 | Rewards entry | warn | gamification | `Digia.openRewards(` | Add the rewards entry from **Gamification**. |
+| IO-21 | Rewards link handled | warn | gamification | `Digia.isRewardsDeepLink(` or `Digia.handleDeepLink(` in the app's URL handler, and the app's scheme in `CFBundleURLSchemes` | Add the rewards link from **Gamification**. |
+| IO-22 | Core has gamification | fail | gamification | the `DigiaEngage` core at `TBD` or later | Tell the user the version needed; change it only with their consent. |

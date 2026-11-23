@@ -253,6 +253,52 @@ Values are `String`, number, `Boolean` or `List<String>`. Send dates as ISO 8601
 out fields that are null. Calls merge. `setUserAttributes` needs `setUserId` first.
 `Digia.clearUserId()` clears them.
 
+## Gamification
+
+Only if gamification is on for the client's Digia project. The facts behind these steps are in
+[shared.md](shared.md#gamification). The floating entry and the teaser need no code.
+
+**Identity is required.** Add **Identity** and **User hash**, even if neither was needed before.
+With **Project settings → User verification** on, a call without the right hash gets no games
+and an empty rewards page.
+
+**Rewards entry.** Where the app has a profile or account menu, add a "My rewards" item that opens
+the rewards page:
+
+```kotlin
+Digia.openRewards(context)
+```
+
+Pass an Activity. Another `Context` opens the page in a new task. The SDK declares the screen in
+its own manifest. Ask the user where the entry goes if the app has no such menu.
+
+**Rewards link.** A campaign or push can open the rewards page with `<scheme>://_digia/rewards`,
+using the app's own scheme. If no activity has an intent filter for that scheme, add one to the
+activity that handles incoming links:
+
+```xml
+<intent-filter>
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <category android:name="android.intent.category.BROWSABLE" />
+    <data android:scheme="myapp" android:host="_digia" android:path="/rewards" />
+</intent-filter>
+```
+
+Then, where that activity reads incoming links (`onCreate` and `onNewIntent`), let the SDK go
+first:
+
+```kotlin
+val uri = intent?.data
+if (uri != null && Digia.handleDeepLink(this, uri)) return
+```
+
+`Digia.isRewardsDeepLink(uri)` only tests the link.
+
+**Reward links.** A reward's button follows its link. To route those links through the app's own
+navigation, add `actionHandlers` to `DigiaConfig` (deep links and web links). Add it only when the
+user asks.
+
 ## Debug deeplink
 
 No step. The SDK declares the `digia-engage://_digia/debug-settings` link in its own manifest.
@@ -282,3 +328,7 @@ It opens in debuggable builds only. Test with
 | AN-14 | User attributes sent | warn | digia, dmc | `Digia.setUserAttributes(` | Add **User attributes**. |
 | AN-15 | Selected tab anchored | warn | all | each Compose navigation item with a `DigiaAnchor` and a different selected icon has the same anchor key on both icons | Wrap both icons as **Anchors and slots** says. |
 | AN-16 | WebEngage SDK in range | fail | webengage | no `com.webengage:android-sdk` 5.2.0 or later in Gradle files or the version catalog | Follow the **WebEngage** step. |
+| AN-17 | User hash passed | fail | gamification | `Digia.setUserId(` with `userHash =` | Add **User hash**. If the server does not send a hash yet, tell the user. |
+| AN-18 | Rewards entry | warn | gamification | `Digia.openRewards(` | Add the rewards entry from **Gamification**. |
+| AN-19 | Rewards link handled | warn | gamification | `Digia.handleDeepLink(` or `Digia.isRewardsDeepLink(` in the activity that receives the app's links | Add the rewards link from **Gamification**. |
+| AN-20 | Core has gamification | fail | gamification | `tech.digia:engage` at `TBD` or later | Tell the user the version needed; change it only with their consent. |
