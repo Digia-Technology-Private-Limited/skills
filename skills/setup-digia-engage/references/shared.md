@@ -67,7 +67,8 @@ picks each outcome. The SDK shows the games and draws the rewards page. Docs:
 Version floor: the first core release with gamification, on each stack. It is `TBD`: no release
 has it yet. Flutter has no gamification.
 
-**User verification.** Gamification needs `Digia.setUserId`. With **Project settings → User
+**User verification.** Docs: `docs.digia.tech/developer/reference/user-verification`.
+Gamification needs `Digia.setUserId`. With **Project settings → User
 verification** on in the dashboard, the app also passes `userHash`: HMAC-SHA256 of the trimmed
 user ID, keyed with that secret, as lowercase hex. Only the app's server computes it. Never put
 the secret in the app. With verification on and the hash missing or wrong:
@@ -82,8 +83,7 @@ hash across launches. `clearUserId` clears both.
 
 **Rewards page.** Full screen, drawn by the SDK: the user's game chances and their active, used
 and expired rewards. It needs an initialized SDK and a user. It closes an open game first. Test
-plays do not show on it. A link that ends in `_digia/rewards`, such as `myapp://_digia/rewards`,
-opens it. The SDK does not own the scheme: the app registers its own.
+plays do not show on it.
 
 **Floating entry and teaser.** No code. They show in the slot key `digia_rewards_widget`, which
 the SDK handles.

@@ -106,8 +106,8 @@ Show a short summary with these parts. Leave out a part that has nothing in it:
 - **Anchors and slots**: each key and where it is.
 - **Events and attributes**: each `trackEvent` and `setUserAttributes` call you added, its file,
   and the analytics call it mirrors.
-- **Gamification**: where the rewards entry is, the app scheme for the rewards link, and where
-  the app gets `userHash` from its server, or that the server side is still to do.
+- **Gamification**: where the rewards entry is, and where the app gets `userHash` from its
+  server, or that the server side is still to do.
 - **Dependency overrides**: one line each, `<package>: app has <version>, Digia needs
   <version>, overridden to <version>`, and why Digia needs it, for example "digia_engage 2.3.0
   needs connectivity_plus 6 or 7". Say that the override can break code that uses the old version.
@@ -168,13 +168,13 @@ Also give the steps that apply to this setup:
   first app release with Digia Engage, or later. Older app versions cannot show the campaign.
 - **Own popups**: if the app shows its own popups or a payment flow, use
   `Digia.setCampaignsSuppressed`, as **More options** in the stack reference says.
-- **User hash**: if the team connects data or turns on **Settings → User verification**, pass
+- **User hash**: if the team connects data or turns on **Project settings → User verification**, pass
   `userHash`, as **Identity** in the stack reference says. With gamification, see the next item.
 - **Gamification**: hand the backend team the **Server side** list in
   [shared.md](references/shared.md#gamification): the `userHash`, the webhooks with their
   signature check, and the reward used callback. Keep **Project settings → User verification**
-  on: with it off, any user ID can claim rewards. Reward links use the app's own scheme. With a
-  CEP, the campaign team connects each CEP campaign to its Digia campaign with
+  on: with it off, any user ID can claim rewards. Reward links into the app use the app's own
+  scheme. With a CEP, the campaign team connects each CEP campaign to its Digia campaign with
   `digia_campaign_key`. Test plays do not show on the rewards page.
 - **Names to share**: give the campaign team the screen names, events and their properties, user
   attributes, anchor keys and slot keys.

@@ -175,9 +175,9 @@ launches. Logout clears everything about the previous user, inline content inclu
 
 ### User hash
 
-Only if the team connects data (PostHog, Segment, Google Analytics) or turns on **Settings → User
+Only if the team connects data (PostHog, Segment, Google Analytics) or turns on **Project settings → User
 verification** in the Digia Engage Dashboard. Otherwise skip it. The app's server signs the user
-ID with the secret from **Settings → User verification** (HMAC-SHA256, as lowercase hex) and sends
+ID with the secret from **Project settings → User verification** (HMAC-SHA256, as lowercase hex) and sends
 it to the app, for example in the login response. Never put the secret in the app. Pass it with
 the user ID:
 
@@ -278,20 +278,6 @@ Digia.openRewards()
 Call it on the main actor. It opens over the top-most view controller, and does nothing below
 iOS 17. Ask the user where the entry goes if the app has no such menu.
 
-**Rewards link.** A campaign or push can open the rewards page with `<scheme>://_digia/rewards`,
-using the app's own scheme. If `Info.plist` has no `CFBundleURLTypes` entry for that scheme, add
-one. Next to the debug link handler from **Debug deeplink**:
-
-```swift
-.onOpenURL { url in
-    if Digia.isRewardsDeepLink(url) { Digia.openRewards(); return }
-    guard Digia.isDebugSettingsDeepLink(url) else { return }
-    _ = Digia.handleDeepLink(url, from: topViewController)
-}
-```
-
-UIKit: make the same check in `scene(_:openURLContexts:)`.
-
 **Reward links.** A reward's button follows its link. To route those links through the app's own
 navigation, add `actionHandlers` to `DigiaConfig` (deep links and web links). Add it only when the
 user asks.
@@ -339,5 +325,4 @@ Get `topViewController` with the app's own helper. UIKit: call
 | IO-18 | WebEngage plugin registered early | warn | webengage | `Digia.register(DigiaWebEngagePlugin())` in the same launch method as the WebEngage start, right after it | Move the call as the **WebEngage** step says. |
 | IO-19 | User hash passed | fail | gamification | `Digia.setUserId(` with `userHash:` | Add **User hash**. If the server does not send a hash yet, tell the user. |
 | IO-20 | Rewards entry | warn | gamification | `Digia.openRewards(` | Add the rewards entry from **Gamification**. |
-| IO-21 | Rewards link handled | warn | gamification | `Digia.isRewardsDeepLink(` or `Digia.handleDeepLink(` in the app's URL handler, and the app's scheme in `CFBundleURLSchemes` | Add the rewards link from **Gamification**. |
-| IO-22 | Core has gamification | fail | gamification | the `DigiaEngage` core at `TBD` or later | Tell the user the version needed; change it only with their consent. |
+| IO-21 | Core has gamification | fail | gamification | the `DigiaEngage` core at `TBD` or later | Tell the user the version needed; change it only with their consent. |

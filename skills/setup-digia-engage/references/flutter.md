@@ -193,7 +193,7 @@ such place, write it in `main`.
 
 ### User hash
 
-Optional. Add it when the team connects data or turns on **Settings → User verification** in the
+Optional. Add it when the team connects data or turns on **Project settings → User verification** in the
 Digia Engage Dashboard. The app's backend computes the hash. Pass it with the user ID:
 
 ```dart

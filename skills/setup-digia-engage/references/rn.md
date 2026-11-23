@@ -181,8 +181,8 @@ CEP's own login call. It does not reach Digia.
 
 ### User hash
 
-Optional. Add it when the team connects data or turns on **Settings → User verification** in the
-Digia Engage Dashboard. The app's backend computes the hash. Pass it with the user ID:
+Optional. Add it when the team connects data or turns on **Project settings → User verification**
+in the Digia Engage Dashboard. The app's backend computes the hash. Pass it with the user ID:
 
 ```ts
 Digia.setUserId(user.id, { userHash });
@@ -332,18 +332,6 @@ Digia.openRewards();
 It takes no arguments, and does nothing below iOS 17. Ask the user where the entry goes if the
 app has no such menu.
 
-**Rewards link.** A campaign or push can open the rewards page with `<scheme>://_digia/rewards`,
-using the app's own scheme. After `initialize`, `@digia-engage/core` listens for the link through
-`Linking`, so the app only registers its scheme:
-
-- Expo: `expo.scheme` in `app.json`.
-- React Native CLI: an intent filter for the scheme on `MainActivity` in
-  `android/app/src/main/AndroidManifest.xml`, and the scheme in `CFBundleURLSchemes` with the
-  `RCTLinkingManager` step from **Debug deeplink**.
-
-Add no JavaScript routing for it. If the app routes links itself, `Digia.isRewardsDeepLink(url)`
-tests one and `Digia.handleDeepLink(url)` opens it.
-
 **Reward links.** A reward's button follows its link. To route those links through the app's own
 navigation, add `actionHandlers.deepLink` and `actionHandlers.openURL`. Add them only when the user
 asks.
@@ -386,5 +374,4 @@ return `RCTLinkingManager.application(app, open: url, options: options)`.
 | RN-21 | Digia spec repo | fail | all | Expo: `@digia-engage/core` in `app.json` `plugins`; React Native CLI: `digia-podspecs.git` and `cdn.cocoapods.org` `source` lines at the top of `ios/Podfile` | Add the step from **Dependencies** and run `pod install --repo-update`. |
 | RN-22 | User hash passed | fail | gamification | `Digia.setUserId(` with `{ userHash` | Add **User hash**. If the server does not send a hash yet, tell the user. |
 | RN-23 | Rewards entry | warn | gamification | `Digia.openRewards(` | Add the rewards entry from **Gamification**. |
-| RN-24 | App scheme registered | warn | gamification | Expo: `scheme` in `app.json`; React Native CLI: an `android:scheme` intent filter in `AndroidManifest.xml` and the app's scheme in `CFBundleURLSchemes` | Add the rewards link from **Gamification**. |
-| RN-25 | Core has gamification | fail | gamification | `@digia-engage/core` at `TBD` or later in `package.json` | Tell the user the version needed; change it only with their consent. |
+| RN-24 | Core has gamification | fail | gamification | `@digia-engage/core` at `TBD` or later in `package.json` | Tell the user the version needed; change it only with their consent. |
