@@ -181,8 +181,8 @@ CEP's own login call. It does not reach Digia.
 
 ### User hash
 
-Optional. Add it when the team connects data or turns on **Settings → User verification** in the
-Digia Engage Dashboard. The app's backend computes the hash. Pass it with the user ID:
+Optional. Add it when the team connects data or turns on **Project settings → User verification**
+in the Digia Engage Dashboard. The app's backend computes the hash. Pass it with the user ID:
 
 ```ts
 Digia.setUserId(user.id, { userHash });
@@ -312,6 +312,30 @@ Values are strings, numbers, booleans or string arrays. Send dates as ISO 8601 s
 fields that are null or undefined. Calls merge. `setUserAttributes` needs `setUserId` first.
 `Digia.clearUserId()` clears them.
 
+## Gamification
+
+Only if gamification is on for the client's Digia project. The facts behind these steps are in
+[shared.md](shared.md#gamification). The floating entry and the teaser need no code. On iOS, games
+and the rewards page show only on iOS 17 and later.
+
+**Identity is required.** Add **Identity** and **User hash**, even if neither was needed before.
+With **Project settings → User verification** on, a call without the right hash gets no games
+and an empty rewards page.
+
+**Rewards entry.** Where the app has a profile or account menu, add a "My rewards" item that opens
+the rewards page:
+
+```ts
+Digia.openRewards();
+```
+
+It takes no arguments, and does nothing below iOS 17. Ask the user where the entry goes if the
+app has no such menu.
+
+**Reward links.** A reward's button follows its link. To route those links through the app's own
+navigation, add `actionHandlers.deepLink` and `actionHandlers.openURL`. Add them only when the user
+asks.
+
 ## Debug deeplink
 
 iOS: add a `CFBundleURLTypes` entry with `digia-engage` in `CFBundleURLSchemes` to `Info.plist`
@@ -348,3 +372,6 @@ return `RCTLinkingManager.application(app, open: url, options: options)`.
 | RN-19 | User attributes sent | warn | digia, dmc | `Digia.setUserAttributes(` | Add **User attributes**. |
 | RN-20 | Selected tab anchored | warn | all | each `tabBarIcon` returns a `DigiaAnchorView` around both its focused and unfocused icon | Wrap the icon as **Anchors and slots** says. |
 | RN-21 | Digia spec repo | fail | all | Expo: `@digia-engage/core` in `app.json` `plugins`; React Native CLI: `digia-podspecs.git` and `cdn.cocoapods.org` `source` lines at the top of `ios/Podfile` | Add the step from **Dependencies** and run `pod install --repo-update`. |
+| RN-22 | User hash passed | fail | gamification | `Digia.setUserId(` with `{ userHash` | Add **User hash**. If the server does not send a hash yet, tell the user. |
+| RN-23 | Rewards entry | warn | gamification | `Digia.openRewards(` | Add the rewards entry from **Gamification**. |
+| RN-24 | Core has gamification | fail | gamification | `@digia-engage/core` at `TBD` or later in `package.json` | Tell the user the version needed; change it only with their consent. |

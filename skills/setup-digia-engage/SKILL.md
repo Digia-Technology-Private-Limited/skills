@@ -48,13 +48,19 @@ Ask the user, in one prompt. Use your question tool if you have one (for example
   and **Digia with CleverTap**, **MoEngage** or **WebEngage**. The
   app already calls `Digia.initialize`: mark the setup it uses now as current.
 - The Digia API key, if they have one. They can skip it and add it later.
+- Whether gamification is turned on for their Digia project: **Yes** or **No**. Default **No**:
+  Digia turns it on per client, and most apps do not have it. The app already calls
+  `Digia.openRewards`: mark **Yes** as current. Flutter: do not ask. Flutter has no gamification;
+  if the user asks for it, say so.
 
-Read the stack reference and [shared.md](references/shared.md) now. Done when stack and CEP are both known.
+Read the stack reference and [shared.md](references/shared.md) now. Done when the stack, the CEP
+and the gamification answer are known.
 
 ## 3. Load the rules
 
 From the **Check** table in the stack reference, keep the rules whose CEP column is `all` or
-names this CEP. For `dmc`, also keep the rules marked `dmc`.
+names this CEP. For `dmc`, also keep the rules marked `dmc`. If gamification is on, also keep the
+rules marked `gamification`.
 
 Done when you hold the list of applicable rule IDs.
 
@@ -78,14 +84,15 @@ Follow the stack reference, section by section, for this CEP:
    reference says.
 5. For `digia` and `dmc`, add events and user attributes as **Digia-managed campaigns** in the
    stack reference says.
-6. Match the app's existing code style, entry points and navigation library.
-7. Add a short comment, one or two lines, at each change in the app's code. Say why the change is
+6. If gamification is on, add **Gamification** from the stack reference.
+7. Match the app's existing code style, entry points and navigation library.
+8. Add a short comment, one or two lines, at each change in the app's code. Say why the change is
    there, for example `// Digia Engage: shows in-app campaigns on top of the app.` Skip files that
    do not allow comments, such as JSON.
-8. Do not change the version of a package that the app already has. If Digia needs a different
+9. Do not change the version of a package that the app already has. If Digia needs a different
    version: Flutter, add a `dependency_overrides` entry as `flutter.md` says, and list each
    override in the summary; other stacks, tell the user and change nothing without consent.
-9. Run the static check: `flutter analyze` for Flutter, `npx tsc --noEmit` for React Native when
+10. Run the static check: `flutter analyze` for Flutter, `npx tsc --noEmit` for React Native when
    the app has `tsconfig.json`. Native Android and iOS have no fast check without a build: read
    the diff again instead. If an error comes from your change or an override, do not change
    unrelated app code to fix it. Tell the user each problem and its cause, for example a
@@ -99,6 +106,8 @@ Show a short summary with these parts. Leave out a part that has nothing in it:
 - **Anchors and slots**: each key and where it is.
 - **Events and attributes**: each `trackEvent` and `setUserAttributes` call you added, its file,
   and the analytics call it mirrors.
+- **Gamification**: where the rewards entry is, and where the app gets `userHash` from its
+  server, or that the server side is still to do.
 - **Dependency overrides**: one line each, `<package>: app has <version>, Digia needs
   <version>, overridden to <version>`, and why Digia needs it, for example "digia_engage 2.3.0
   needs connectivity_plus 6 or 7". Say that the override can break code that uses the old version.
@@ -159,8 +168,14 @@ Also give the steps that apply to this setup:
   first app release with Digia Engage, or later. Older app versions cannot show the campaign.
 - **Own popups**: if the app shows its own popups or a payment flow, use
   `Digia.setCampaignsSuppressed`, as **More options** in the stack reference says.
-- **User hash**: if the team connects data or turns on **Settings → User verification**, pass
-  `userHash`, as **Identity** in the stack reference says.
+- **User hash**: if the team connects data or turns on **Project settings → User verification**, pass
+  `userHash`, as **Identity** in the stack reference says. With gamification, see the next item.
+- **Gamification**: hand the backend team the **Server side** list in
+  [shared.md](references/shared.md#gamification): the `userHash`, the webhooks with their
+  signature check, and the reward used callback. Keep **Project settings → User verification**
+  on: with it off, any user ID can claim rewards. Reward links into the app use the app's own
+  scheme. With a CEP, the campaign team connects each CEP campaign to its Digia campaign with
+  `digia_campaign_key`. Test plays do not show on the rewards page.
 - **Names to share**: give the campaign team the screen names, events and their properties, user
   attributes, anchor keys and slot keys.
 

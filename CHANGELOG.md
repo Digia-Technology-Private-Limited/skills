@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.6.0
+
+Gamification on Android, iOS and React Native, for clients whose Digia project has it turned on.
+Most apps do not, so the skill adds nothing for it unless the user says yes.
+
+- Step 2 asks whether gamification is on, default No. An app that already calls
+  `Digia.openRewards` is marked Yes. Flutter is not asked: it has no gamification.
+- Each stack reference gets a **Gamification** section: Identity and the user hash become
+  required, and a "My rewards" entry calls `Digia.openRewards`. The floating entry and the teaser
+  need no code.
+- New Check rules marked `gamification`: AN-17 to AN-19, IO-19 to IO-21, RN-22 to RN-24. They cover
+  the user hash, the rewards entry and the core version.
+- `shared.md` gets the gamification facts, with links to the docs: user verification and what a
+  missing hash does, the rewards page, reward link routing and blocked schemes, and the server
+  side to hand to the backend team.
+- The core version with gamification is `TBD` until the SDKs release it.
+
 ## 1.5.0
 
 Every stack follows the Digia Engage docs at `digia.tech/docs/developer`. Where the docs and the
