@@ -103,8 +103,24 @@ Compose: wrap the root content once.
 setContent { AppTheme { DigiaHost { AppNavHost() } } }
 ```
 
-Views: add `com.digia.engage.DigiaHostView` to the root layout of each activity, on top of the
-content, with `match_parent` size.
+Views, XML or Fragments: add one line to `Application.onCreate`, before or after
+`Digia.initialize`. It adds the host to every Activity, so change no layout:
+
+```kotlin
+override fun onCreate() {
+    super.onCreate()
+    // Digia Engage: shows campaigns above every Activity.
+    Digia.attach(this)
+    // ...CEP start, register, Digia.initialize
+}
+```
+
+If there is no `Application` class, create one and set `android:name` on `<application>` in
+`AndroidManifest.xml`. Activities that are not an AndroidX `ComponentActivity` (for example a plain
+`android.app.Activity`) get no host and log a warning: tell the user which ones. Remove any
+`DigiaHostView` the app added to its layouts by hand, so a screen has one host. An app with both
+Compose and Views screens calls `Digia.attach` and keeps its `DigiaHost`: the `DigiaHost` then
+renders only the content. Never add `Digia.attach` to a React Native or Flutter app.
 
 ## Screen tracking
 
@@ -271,7 +287,7 @@ It opens in debuggable builds only. Test with
 | AN-02 | Initialized in `Application.onCreate` | fail | all | `Digia.initialize(` in the class named by `android:name` | Add **Initialize and register**. |
 | AN-03 | Real API key | fail | all | `apiKey =` value is not `digia_xxx` | Put the key from the Digia dashboard. |
 | AN-04 | One plugin registered, after the CEP SDK start | fail | clevertap, moengage, webengage | exactly one `Digia.register(`, after the CEP start call, either side of `Digia.initialize(` | Add the call from **Initialize and register**. |
-| AN-05 | Host present | fail | all | `DigiaHost {` or `DigiaHostView` | Add **Host**. |
+| AN-05 | Host present | fail | all | `Digia.attach(` in the class named by `android:name`, or `DigiaHost {` in Compose | Add **Host**. |
 | AN-06 | Screen tracking | fail | all | `DigiaScreen(` or `digiaScreen(` or `Digia.setCurrentScreen(` | Add **Screen tracking**. |
 | AN-07 | Identity | warn | all | `Digia.setUserId(` and `Digia.clearUserId(` | Add **Identity**. |
 | AN-08 | CleverTap native setup | fail | clevertap | `ActivityLifecycleCallback.register(this)` before `super.onCreate()`, or the class extends `CleverTapApplication`; `DigiaCleverTapPlugin.prepareCleverTapCustomTemplates()` in `onCreate` before any `CleverTapAPI` call; account ID in `AndroidManifest.xml` | Add the **CleverTap** step. |
