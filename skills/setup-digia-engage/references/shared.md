@@ -15,7 +15,9 @@ Older core versions do not run Digia-managed campaigns. On Android, 3.4.0 and ea
 `@Composable` annotations in the published artifact, so a Compose app crashes at launch with
 `NoSuchMethodError` on `DigiaHost`; use 3.4.1 or later. On iOS, the app builds from 15.0, but
 campaigns show only on iOS 17 and later, on every stack. If the target is below 17.0, tell the
-user.
+user. A native Android app built with Views (no `DigiaHost` in Compose) needs `tech.digia:engage` 3.5.0 or later
+for `Digia.attach`; a UIKit iOS app needs `DigiaEngage` 4.5.0 or later for
+`Digia.attach(to:)`, `DigiaSlotView` and `DigiaAnchorView`.
 
 ## Call order
 

@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.0
+
+- Android Views apps: the host is `Digia.attach(this)` in `Application.onCreate` (`tech.digia:engage` 3.5.0 or
+  later), replacing a `DigiaHostView` per layout. Compose apps keep `DigiaHost`. AN-05 accepts
+  either. Never added to React Native or Flutter apps.
+- iOS UIKit apps: the host is `Digia.attach(to:)` with a plain root view controller; a navigation,
+  tab bar, split or page controller root is wrapped in a plain container first (`DigiaEngage` 4.5.0 or later). The skill
+  flags code that casts `window.rootViewController`. Slots use `DigiaSlotView`. IO-05 accepts
+  either host.
+
 ## 1.5.0
 
 Every stack follows the Digia Engage docs at `digia.tech/docs/developer`. Where the docs and the

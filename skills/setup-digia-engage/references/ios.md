@@ -119,8 +119,25 @@ SwiftUI: wrap the root view once.
 WindowGroup { DigiaHost { ContentView() } }
 ```
 
-UIKit: host the root view controller's view in `DigiaHost` with `UIHostingController`, or follow
-the UIKit section of the docs.
+UIKit: where the window is created (`SceneDelegate.scene(_:willConnectTo:options:)`, or
+`application(_:didFinishLaunchingWithOptions:)` without scenes), call `attach` after
+`makeKeyAndVisible()`. The root must be a plain `UIViewController`:
+
+```swift
+window.rootViewController = HomeViewController()
+window.makeKeyAndVisible()
+// Digia Engage: shows campaigns above every screen.
+Digia.attach(to: window)
+```
+
+If the root is a `UINavigationController`, `UITabBarController`, `UISplitViewController` or
+`UIPageViewController`, `attach` draws nothing there. Add a plain container controller that holds it
+as a child (add the child's view full size, and return the child from `childForStatusBarStyle`,
+`childForStatusBarHidden` and `childForHomeIndicatorAutoHidden`), make the container the root, then
+call `attach`. Follow the docs' UIKit example. `window.rootViewController` then returns the
+container: search the app for code that reads `rootViewController` and casts it (for example
+`as? UINavigationController`), and change it to go through the container, or tell the user. Never
+call `attach` in a React Native or Flutter app.
 
 ## Screen tracking
 
@@ -162,7 +179,8 @@ ScrollView {
 }
 ```
 
-UIKit: host it with `UIHostingController` at the top of the screen's content. Ask the user before
+UIKit: add a `DigiaSlotView` with `placementKey` at the top of the screen's content, for example as
+the first arranged subview of a stack view. Its height comes from the content. Ask the user before
 you add a slot inside a list, a grid or a form.
 
 Give the user the list of keys. The marketer selects the same keys in the Digia dashboard.
@@ -286,7 +304,7 @@ Get `topViewController` with the app's own helper. UIKit: call
 | IO-02 | Initialized at launch | fail | all | `Digia.initialize(` in the app launch code | Add **Initialize and register**. |
 | IO-03 | Real API key | fail | all | `apiKey:` value is not `digia_xxx` | Put the key from the Digia dashboard. |
 | IO-04 | One plugin registered, after the CEP SDK start | fail | clevertap, moengage, webengage | exactly one `Digia.register(`, after the CEP start call, either side of `Digia.initialize(` | Add the call from **Initialize and register**. |
-| IO-05 | Host present | fail | all | exactly one `DigiaHost` | Add **Host**. |
+| IO-05 | Host present | fail | all | exactly one of: `DigiaHost` (SwiftUI) or `Digia.attach(to:` (UIKit), with a plain root view controller | Add **Host**. |
 | IO-06 | Screen tracking | fail | all | `Digia.setCurrentScreen(` or `digiaScreen(` | Add **Screen tracking**. |
 | IO-07 | Identity | warn | all | `Digia.setUserId(` and `Digia.clearUserId(` | Add **Identity**. |
 | IO-08 | Deployment target | warn | all | `IPHONEOS_DEPLOYMENT_TARGET` at 17.0 or above; it must be at least 15.0, or the build fails | Raise it to the minimum, and tell the user that devices below iOS 17 show no campaigns. |
